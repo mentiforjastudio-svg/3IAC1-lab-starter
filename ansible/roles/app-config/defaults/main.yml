@@ -1,0 +1,18 @@
+---
+# roles/app-config/defaults/main.yml
+# Variables par défaut — priorité la plus basse,
+# peuvent être surchargées depuis le playbook appelant
+
+app_name:          "DefaultApp"
+app_version:       "1.0.0"
+app_environment:   "development"
+app_port:          8080
+app_log_level:     "info"
+app_enable_debug:  false
+app_enable_metrics: false
+
+# Ces chemins sont définis dans le playbook appelant (use-role.yml)
+# afin de rester relatifs au projet
+app_config_dir: "{{ playbook_dir }}/../output/myapp/config"
+app_log_dir:    "{{ playbook_dir }}/../output/myapp/logs"
+app_data_dir:   "{{ playbook_dir }}/../output/myapp/data"

@@ -1,0 +1,31 @@
+# Terraform — state et cache
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+tfplan
+
+# Terraform — valeurs sensibles
+*.tfvars
+!*.tfvars.example
+
+# Fichiers générés par les TP
+output/
+servers/
+
+# Inventaire généré par Terraform (recréé par terraform apply)
+ansible/inventories/generated.ini
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

@@ -1,0 +1,17 @@
+# Configuration générée par Ansible
+# Application : {{ app_name }}
+# Version     : {{ app_version }}
+# Environnement: {{ app_environment }}
+
+[server]
+port      = {{ app_port }}
+log_level = {{ app_log_level }}
+
+[paths]
+config_dir = {{ app_config_dir }}
+log_dir    = {{ app_log_dir }}
+data_dir   = {{ app_data_dir }}
+
+[features]
+debug   = {{ app_enable_debug | lower }}
+metrics = {{ app_enable_metrics | lower }}

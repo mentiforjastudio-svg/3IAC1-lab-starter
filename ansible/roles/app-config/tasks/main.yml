@@ -1,0 +1,44 @@
+---
+# roles/app-config/tasks/main.yml
+
+- name: Afficher les paramètres de configuration
+  debug:
+    msg: "Déploiement de {{ app_name }} v{{ app_version }} ({{ app_environment }})"
+
+- name: Créer le répertoire de configuration
+  file:
+    path: "{{ app_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Créer le répertoire de logs
+  file:
+    path: "{{ app_log_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Créer le répertoire de données
+  file:
+    path: "{{ app_data_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Générer app.conf depuis le template
+  template:
+    src: app.conf.j2
+    dest: "{{ app_config_dir }}/app.conf"
+    mode: '0644'
+  notify: Recharger configuration
+
+- name: Générer config.json depuis le template
+  template:
+    src: config.json.j2
+    dest: "{{ app_config_dir }}/config.json"
+    mode: '0644'
+
+- name: Créer le fichier de log initial
+  copy:
+    content: "# Log file pour {{ app_name }} — créé par Ansible\n"
+    dest: "{{ app_log_dir }}/app.log"
+    mode: '0644'
+    force: no   # Ne pas écraser si le fichier existe déjà (idempotence)

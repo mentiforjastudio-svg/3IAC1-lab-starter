@@ -1,0 +1,5 @@
+# Copier ce fichier en terraform.tfvars et adapter les valeurs
+# Ne jamais committer terraform.tfvars si il contient des secrets
+
+app_name    = "site-3iac1"
+environment = "dev"

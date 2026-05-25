@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg:        #0f1117;
+    --surface:   #181c27;
+    --border:    #252b3b;
+    --accent:    #e91e63;
+    --accent2:   #3d6ff8;
+    --accent3:   #00bcd4;
+    --accent4:   #f59e0b;
+    --green:     #22c55e;
+    --text:      #e8ecf4;
+    --muted:     #7a86a1;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0f1117 0%, #181c27 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .h-left { display: flex; align-items: center; gap: 1rem; }
+  .badge-module {
+    background: var(--accent); color: #fff;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 800; line-height: 1.2; }
+  header h1 span { color: var(--muted); font-weight: 400; font-size: .85rem; display: block; }
+  .progress-global {
+    display: flex; align-items: center; gap: .7rem;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .prog-bar { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 3px; width: 0%; transition: width .6s ease; }
+  .prog-count { color: var(--text); font-weight: 600; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    background: var(--surface); padding: 0 1.5rem; overflow-x: auto;
+  }
+  .tab {
+    padding: .65rem 1.1rem; font-family: var(--sans); font-size: .8rem; font-weight: 600;
+    color: var(--muted); border: none; background: transparent; cursor: pointer;
+    border-bottom: 2px solid transparent; white-space: nowrap; transition: all .2s;
+    position: relative; top: 1px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 6px; vertical-align: middle;
+  }
+
+  /* ── CONTENT ── */
+  .content { padding: 1.2rem 1.5rem; max-width: 1200px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── TIMELINE ── */
+  .day-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 2px;
+    color: var(--accent); text-transform: uppercase; margin: 1.2rem 0 .7rem;
+    display: flex; align-items: center; gap: .7rem;
+  }
+  .day-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .tp-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: .7rem; overflow: hidden; transition: border-color .2s;
+  }
+  .tp-card:hover { border-color: #3a4055; }
+
+  .tp-header {
+    display: flex; align-items: center; gap: .8rem; padding: .75rem 1rem;
+    cursor: pointer; user-select: none;
+  }
+  .tp-check {
+    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    cursor: pointer; transition: all .2s; font-size: 11px;
+  }
+  .tp-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .tp-check.partial { background: var(--accent4); border-color: var(--accent4); color: #fff; }
+
+  .tp-type {
+    font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 3px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .type-setup    { background: #1a2744; color: var(--accent2); }
+  .type-cours    { background: #1f2937; color: #94a3b8; }
+  .type-tp       { background: #1a1127; color: #c084fc; }
+  .type-demo     { background: #172535; color: var(--accent3); }
+  .type-terrain  { background: #1c1810; color: var(--accent4); }
+  .type-revision { background: #0f1f17; color: var(--green); }
+  .type-final    { background: #1f1117; color: var(--accent); }
+
+  .tp-title { font-weight: 600; font-size: .88rem; flex: 1; }
+  .tp-time  { font-family: var(--mono); font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+  .tp-slide {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    background: var(--bg); padding: 2px 8px; border-radius: 3px; flex-shrink: 0;
+  }
+  .chevron { color: var(--muted); font-size: 11px; transition: transform .2s; flex-shrink: 0; }
+  .tp-card.open .chevron { transform: rotate(90deg); }
+
+  .tp-body {
+    display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border);
+  }
+  .tp-card.open .tp-body { display: block; }
+
+  .tp-desc { font-size: .82rem; color: #b0b8cc; line-height: 1.6; margin: .8rem 0 1rem; }
+
+  /* ── FILES TABLE ── */
+  .section-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase; margin-bottom: .5rem; margin-top: .9rem;
+  }
+  .files-grid { display: flex; flex-direction: column; gap: 4px; }
+  .file-row {
+    display: flex; align-items: flex-start; gap: .6rem;
+    background: var(--bg); border-radius: 5px; padding: .5rem .75rem;
+    border: 1px solid var(--border);
+  }
+  .file-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .file-path { font-family: var(--mono); font-size: 11px; color: var(--accent3); flex-shrink: 0; min-width: 230px; }
+  .file-desc { font-size: .78rem; color: var(--muted); line-height: 1.4; }
+
+  /* ── CANVA LINKS ── */
+  .canva-grid { display: flex; flex-direction: column; gap: 4px; }
+  .canva-row {
+    display: flex; align-items: center; gap: .7rem;
+    background: var(--bg); border-radius: 5px; padding: .5rem .75rem;
+    border: 1px solid var(--border);
+  }
+  .canva-num {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--accent); background: #1f0810; padding: 2px 7px; border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .canva-slide { font-size: .8rem; color: var(--text); flex: 1; }
+  .canva-ref { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* ── NOTES ── */
+  .note-box {
+    margin-top: .9rem; padding: .7rem 1rem; border-radius: 6px;
+    border-left: 3px solid var(--accent4);
+    background: #1c1810; font-size: .8rem; color: #c0a060; line-height: 1.5;
+  }
+  .note-box.info { border-color: var(--accent2); background: #0f1520; color: #7aadea; }
+  .note-box.danger { border-color: var(--accent); background: #1a0b10; color: #e08090; }
+
+  /* ── PANEL ARBO ── */
+  .tree { font-family: var(--mono); font-size: 12px; line-height: 1.9; }
+  .tree-item { display: flex; align-items: flex-start; gap: .5rem; padding: .1rem 0; }
+  .tree-indent { color: var(--border); }
+  .tree-name { flex: 1; }
+  .tree-name.dir  { color: var(--accent2); font-weight: 600; }
+  .tree-name.file { color: var(--text); }
+  .tree-name.cfg  { color: var(--accent4); }
+  .tree-name.tpl  { color: var(--accent3); }
+  .tree-name.sh   { color: var(--green); }
+  .tree-name.md   { color: #c084fc; }
+  .tree-tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 3px; white-space: nowrap;
+    background: #1f2937; color: var(--muted);
+  }
+  .tree-tag.new { background: #0f1f17; color: var(--green); }
+
+  /* ── PANEL QCM ── */
+  .qcm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+  @media (max-width: 600px) { .qcm-grid { grid-template-columns: 1fr; } }
+  .qcm-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem;
+  }
+  .qcm-theme { font-family: var(--mono); font-size: 10px; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+  .qcm-items { list-style: none; }
+  .qcm-items li { font-size: .8rem; color: var(--muted); padding: .2rem 0; border-bottom: 1px solid var(--border); }
+  .qcm-items li:last-child { border: none; }
+  .qcm-items li::before { content: '→ '; color: var(--accent2); }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+  .leg { display: flex; align-items: center; gap: .4rem; font-size: .75rem; color: var(--muted); }
+  .leg span { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="badge-module">3IAC1</div>
+    <h1>Fiche de suivi TP
+      <span>Terraform &amp; Ansible — 2 jours · local only</span>
+    </h1>
+  </div>
+  <div class="progress-global">
+    <span>Avancement</span>
+    <div class="prog-bar"><div class="prog-fill" id="globalFill"></div></div>
+    <span class="prog-count" id="globalCount">0 / 9</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showPanel('timeline')">
+    <span class="dot" style="background:#e91e63"></span>Déroulé TP
+  </button>
+  <button class="tab" onclick="showPanel('arbo')">
+    <span class="dot" style="background:#3d6ff8"></span>Arborescence
+  </button>
+  <button class="tab" onclick="showPanel('qcm')">
+    <span class="dot" style="background:#22c55e"></span>Révision QCM
+  </button>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════ TIMELINE -->
+<div class="panel active" id="panel-timeline">
+
+  <div class="legend">
+    <div class="leg"><span style="background:#1a2744"></span> SETUP</div>
+    <div class="leg"><span style="background:#1f2937"></span> COURS</div>
+    <div class="leg"><span style="background:#1a1127"></span> TP</div>
+    <div class="leg"><span style="background:#172535"></span> DÉMO</div>
+    <div class="leg"><span style="background:#1c1810"></span> TERRAIN</div>
+    <div class="leg"><span style="background:#0f1f17"></span> RÉVISION</div>
+    <div class="leg"><span style="background:#1f1117"></span> TP FINAL</div>
+  </div>
+
+  <!-- ════ JOUR 1 ════ -->
+  <div class="day-label">Jour 1 — Terraform · 09:00 → 16:30</div>
+
+  <!-- SETUP ENV -->
+  <div class="tp-card" id="card-setup">
+    <div class="tp-header" onclick="toggle('card-setup')">
+      <div class="tp-check" id="chk-setup" onclick="checkToggle(event,'chk-setup')"></div>
+      <span class="tp-type type-setup">SETUP</span>
+      <span class="tp-title">Environnement Linux</span>
+      <span class="tp-time">09:00 – 09:45</span>
+      <span class="tp-slide">Slides 29–31</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Choisir et installer son environnement Ubuntu avant tout TP. WSL2 pour Windows 10/11, VirtualBox + OVA fournie ou UTM pour Mac Apple Silicon. Vérification commune : git, terraform, ansible affichent chacun une version.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📜</span><span class="file-path">scripts/check-env.sh</span><span class="file-desc">Script de vérification automatique de l'environnement — à lancer en tout début de J1 avant de toucher à quoi que ce soit d'autre.</span></div>
+        <div class="file-row"><span class="file-icon">📋</span><span class="file-path">.ia/contexte-projet.md</span><span class="file-desc">Contexte complet fourni aux assistants IA (Copilot) pour qu'ils comprennent la contrainte "local only, pas de cloud".</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S29</span><span class="canva-slide">Annexe A — Choisir son environnement Linux (WSL2 / OVA / UTM)</span><span class="canva-ref">ANNEXE SETUP</span></div>
+        <div class="canva-row"><span class="canva-num">S30</span><span class="canva-slide">Annexe B — Commandes d'installation dans Ubuntu (apt + HashiCorp)</span><span class="canva-ref">ANNEXE SETUP</span></div>
+        <div class="canva-row"><span class="canva-num">S31</span><span class="canva-slide">Annexe C — Arbre de décision rapide selon le poste étudiant</span><span class="canva-ref">ANNEXE SETUP</span></div>
+      </div>
+      <div class="note-box info">Projeter les slides 29–31 en tout début de J1 — elles sont en annexe dans le deck mais doivent être montrées avant la slide 5.</div>
+    </div>
+  </div>
+
+  <!-- COURS IaC -->
+  <div class="tp-card" id="card-iac">
+    <div class="tp-header" onclick="toggle('card-iac')">
+      <div class="tp-check" id="chk-iac" onclick="checkToggle(event,'chk-iac')"></div>
+      <span class="tp-type type-cours">COURS</span>
+      <span class="tp-title">IaC, déclaratif vs impératif, structure HCL</span>
+      <span class="tp-time">09:45 – 10:30</span>
+      <span class="tp-slide">Slides 3–7</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Pourquoi l'IaC résout les problèmes de déploiement manuel. Différence entre approche impérative (étapes) et déclarative (état final). Structure minimale HCL : main.tf, variables.tf, outputs.tf, terraform.tfvars. Sécurité de base : ce qu'on ne committe jamais.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/main.tf</span><span class="file-desc">Exemple minimal avec provider hashicorp/local et resource local_file. Sert de base visuelle pour expliquer la syntaxe HCL.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/variables.tf</span><span class="file-desc">Déclaration de app_name, environment et demo_password (sensitive). Montre les trois types de variables.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/outputs.tf</span><span class="file-desc">Déclaration de l'output app_info — montre comment exposer un résultat après apply.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">.gitignore</span><span class="file-desc">Exclut *.tfstate, .terraform/, *.tfvars, output/ et servers/ — à montrer avant tout premier commit.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S3</span><span class="canva-slide">Pourquoi l'Infrastructure as Code ?</span><span class="canva-ref">COURS · J1-ch1</span></div>
+        <div class="canva-row"><span class="canva-num">S4</span><span class="canva-slide">Déclaratif vs Impératif — tableau comparatif + notions QCM</span><span class="canva-ref">COURS · J1-ch1</span></div>
+        <div class="canva-row"><span class="canva-num">S5</span><span class="canva-slide">Installation &amp; vérification des outils</span><span class="canva-ref">TP · J1-ch3 / J3-ch2</span></div>
+        <div class="canva-row"><span class="canva-num">S6</span><span class="canva-slide">Structure du dossier de travail (arborescence 3iac1-lab)</span><span class="canva-ref">TP · J1-ch5 / J3-ch2</span></div>
+        <div class="canva-row"><span class="canva-num">S7</span><span class="canva-slide">Terraform : structure minimale + exemple HCL complet</span><span class="canva-ref">COURS · J1-ch4</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TP1 -->
+  <div class="tp-card" id="card-tp1">
+    <div class="tp-header" onclick="toggle('card-tp1')">
+      <div class="tp-check" id="chk-tp1" onclick="checkToggle(event,'chk-tp1')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">TP1 — Premier déploiement Terraform local</span>
+      <span class="tp-time">10:45 – 12:00</span>
+      <span class="tp-slide">Slides 8–9</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Créer main.tf avec resource local_file, puis enchaîner init → plan → apply → modifier → plan → apply → destroy. Observer les symboles +, ~, − dans le plan. Lire hello.txt après apply. Comprendre que même un fichier local est suivi dans le state.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/main.tf</span><span class="file-desc">Contient le provider local ~>2.0 et la resource local_file "hello". Point de départ du TP — les étudiants peuvent l'utiliser directement ou le retaper pour la mémorisation.</span></div>
+        <div class="file-row"><span class="file-icon">📁</span><span class="file-path">terraform/jour1/</span><span class="file-desc">Dossier de travail isolé pour les TP du Jour 1. Évite les conflits avec le module et le TP final.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S8</span><span class="canva-slide">TP1 — Créer main.tf et comprendre la ressource local_file</span><span class="canva-ref">TP · J1-ch5 TP3</span></div>
+        <div class="canva-row"><span class="canva-num">S9</span><span class="canva-slide">TP1 — Cycle init / plan / apply / modify / destroy</span><span class="canva-ref">TP · J1-ch6 / J1-ch7</span></div>
+      </div>
+      <div class="note-box">Insister sur la lecture du plan avant chaque apply — c'est le réflexe le plus important à ancrer dès le TP1.</div>
+    </div>
+  </div>
+
+  <!-- TP VARS -->
+  <div class="tp-card" id="card-vars">
+    <div class="tp-header" onclick="toggle('card-vars')">
+      <div class="tp-check" id="chk-vars" onclick="checkToggle(event,'chk-vars')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">Variables, outputs, state et sécurité (TP2)</span>
+      <span class="tp-time">13:00 – 14:30</span>
+      <span class="tp-slide">Slides 10–12</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Déclarer app_name et environment dans variables.tf, les valoriser dans terraform.tfvars, les interpoler dans le content. Puis démonstration choc : passer un faux mot de passe via TF_VAR_demo_password, faire un apply, grep le tfstate — constater que le secret y est en clair. Nettoyage obligatoire après cette démo.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/variables.tf</span><span class="file-desc">Variable demo_password avec sensitive=true et default vide. Sert directement pour la démo sécurité.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour1/terraform.tfvars.example</span><span class="file-desc">Exemple de fichier tfvars à copier-renommer. Montre les valeurs non-sensibles. À ne jamais committer avec de vraies valeurs.</span></div>
+        <div class="file-row"><span class="file-icon">📜</span><span class="file-path">scripts/reset.sh</span><span class="file-desc">Remet l'environnement à zéro après la démo secret : supprime tfstate, tfstate.backup et les fichiers générés.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S10</span><span class="canva-slide">Variables, outputs et tfvars — déclaration et interpolation</span><span class="canva-ref">TP · J1-ch4</span></div>
+        <div class="canva-row"><span class="canva-num">S11</span><span class="canva-slide">State Terraform &amp; sécurité — rôle du state, .gitignore</span><span class="canva-ref">COURS · J2-ch5 / J2-ch8</span></div>
+        <div class="canva-row"><span class="canva-num">S12</span><span class="canva-slide">TP2 — Secret via variable d'environnement + nettoyage</span><span class="canva-ref">TP · J2-ch5 / J4-ch8</span></div>
+      </div>
+      <div class="note-box danger">Après la démo : lancer terraform destroy puis rm -f terraform.tfstate* avant de passer à la suite.</div>
+    </div>
+  </div>
+
+  <!-- TP3 MODULE -->
+  <div class="tp-card" id="card-module">
+    <div class="tp-header" onclick="toggle('card-module')">
+      <div class="tp-check" id="chk-module" onclick="checkToggle(event,'chk-module')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">TP3 — Mini-module config-generator</span>
+      <span class="tp-time">14:45 – 16:00</span>
+      <span class="tp-slide">Slides 13–15</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Créer un module Terraform local réutilisable qui génère un fichier JSON depuis un template HCL. Appeler le même module deux fois depuis le main.tf parent avec des paramètres différents (dev/prod). Comparer les deux fichiers générés dans output/dev et output/prod.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour2/modules/config-generator/main.tf</span><span class="file-desc">Cœur du module : resource local_file avec templatefile(). C'est ici que la magie opère — le template est rendu avec les variables reçues en inputs.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour2/modules/config-generator/variables.tf</span><span class="file-desc">Inputs du module : app_name, environment, port, filename, output_dir. Montre comment un module expose son interface.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour2/modules/config-generator/outputs.tf</span><span class="file-desc">Outputs du module : config_path et readme_path. Ce sont les valeurs que le projet parent peut consommer.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">terraform/jour2/modules/config-generator/templates/config.tpl</span><span class="file-desc">Template HCL (syntaxe ${var}) qui génère le JSON final. Attention : syntaxe différente des templates Jinja2 Ansible.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/jour2/main.tf</span><span class="file-desc">Appelle le module deux fois (config_dev et config_prod) avec des paramètres différents. Montre la réutilisabilité.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S13</span><span class="canva-slide">Modules Terraform — pourquoi moduler, structure type</span><span class="canva-ref">COURS · J2-ch2</span></div>
+        <div class="canva-row"><span class="canva-num">S14</span><span class="canva-slide">En mission réelle — modularisation IaC (exemple anonymisé)</span><span class="canva-ref">TERRAIN · J2-ch2</span></div>
+        <div class="canva-row"><span class="canva-num">S15</span><span class="canva-slide">TP3 — Créer et appeler le module config-generator</span><span class="canva-ref">TP · J2-ch3 TP1+TP2</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO WORKSPACES + CHECKPOINT -->
+  <div class="tp-card" id="card-ws">
+    <div class="tp-header" onclick="toggle('card-ws')">
+      <div class="tp-check" id="chk-ws" onclick="checkToggle(event,'chk-ws')"></div>
+      <span class="tp-type type-demo">DÉMO</span>
+      <span class="tp-title">Workspaces + Checkpoint Terraform</span>
+      <span class="tp-time">16:00 – 16:30</span>
+      <span class="tp-slide">Slides 16–17</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Démonstration live de terraform workspace new/select/list/show. Un workspace = un state isolé. Même code, états séparés — utile pour dev/staging/prod. Suivi d'un checkpoint oral sur les 6 questions de révision Terraform (plan, state, gitignore, variable vs output, module, workspace).</p>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S16</span><span class="canva-slide">Workspaces — commandes et concept "même code, états séparés"</span><span class="canva-ref">DÉMO · J2-ch7</span></div>
+        <div class="canva-row"><span class="canva-num">S17</span><span class="canva-slide">Checkpoint Terraform — 6 questions de révision orale</span><span class="canva-ref">RÉVISION · J1+J2</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ JOUR 2 ════ -->
+  <div class="day-label">Jour 2 — Ansible + Intégration · 09:00 → 17:00</div>
+
+  <!-- TP4 INVENTAIRE -->
+  <div class="tp-card" id="card-tp4">
+    <div class="tp-header" onclick="toggle('card-tp4')">
+      <div class="tp-check" id="chk-tp4" onclick="checkToggle(event,'chk-tp4')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">TP4 — Inventaire localhost &amp; architecture Ansible</span>
+      <span class="tp-time">09:00 – 09:45</span>
+      <span class="tp-slide">Slides 18–20</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Comprendre la différence de rôle entre Terraform (provisionner) et Ansible (configurer). Créer ansible.cfg avec inventory et host_key_checking=False. Créer hosts.ini avec localhost en ansible_connection=local. Lancer ansible all -m ping et ansible webservers --list-hosts.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">⚙️</span><span class="file-path">ansible/ansible.cfg</span><span class="file-desc">Configuration Ansible : pointe vers inventories/hosts.ini, désactive host_key_checking, définit roles_path et stdout_callback=yaml. Sans ce fichier, ansible all -m ping échoue.</span></div>
+        <div class="file-row"><span class="file-icon">📋</span><span class="file-path">ansible/inventories/hosts.ini</span><span class="file-desc">Inventaire statique avec deux groupes : [local] et [webservers], tous deux pointant vers localhost en connexion locale. Utilisé pour tous les TP jusqu'au TP final.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S18</span><span class="canva-slide">Terraform vs Ansible — deux outils, deux missions, fil rouge local</span><span class="canva-ref">COURS · J3 intro</span></div>
+        <div class="canva-row"><span class="canva-num">S19</span><span class="canva-slide">Architecture Ansible minimale — composants, inventaire, ansible.cfg</span><span class="canva-ref">COURS · J3-ch1</span></div>
+        <div class="canva-row"><span class="canva-num">S20</span><span class="canva-slide">TP4 — Inventaire localhost, ping, list-hosts</span><span class="canva-ref">TP · J3-ch3 TP3</span></div>
+      </div>
+      <div class="note-box danger">Lancer ansible all -m ping depuis le dossier ansible/ — ansible.cfg doit être présent dans le dossier courant.</div>
+    </div>
+  </div>
+
+  <!-- TP5 PLAYBOOK -->
+  <div class="tp-card" id="card-tp5">
+    <div class="tp-header" onclick="toggle('card-tp5')">
+      <div class="tp-check" id="chk-tp5" onclick="checkToggle(event,'chk-tp5')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">TP5 — Playbook, Jinja2 &amp; idempotence</span>
+      <span class="tp-time">09:45 – 12:00</span>
+      <span class="tp-slide">Slides 21–24</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Écrire setup-system.yml : créer des dossiers avec file, des fichiers avec copy, lister avec find, afficher avec debug. Relancer pour vérifier l'idempotence. Puis créer le template app-config.json.j2 avec variables, condition if et boucle for. Lancer generate-config.yml et lire le JSON produit.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/playbooks/setup-system.yml</span><span class="file-desc">Playbook complet : crée config/ et logs/, génère app.conf avec copy, liste les fichiers créés avec find+debug. Utilise playbook_dir pour des chemins relatifs robustes.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/playbooks/generate-config.yml</span><span class="file-desc">Playbook Jinja2 : génère output/generated/config.json depuis le template. Inclut un debug qui affiche le contenu après génération.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">ansible/templates/app-config.json.j2</span><span class="file-desc">Template Jinja2 complet : variable {{ }}, condition {% if database_enabled %}, boucle {% for feature in features %}. Montre les trois syntaxes Jinja2 essentielles.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S21</span><span class="canva-slide">Playbook Ansible — structure, exécution, idempotence</span><span class="canva-ref">COURS · J3-ch4</span></div>
+        <div class="canva-row"><span class="canva-num">S22</span><span class="canva-slide">TP5 — Objectif playbook local (modules debug/file/copy/find)</span><span class="canva-ref">TP · J3-ch6 TP4</span></div>
+        <div class="canva-row"><span class="canva-num">S23</span><span class="canva-slide">TP5 — Code YAML complet setup-system.yml (début + fin)</span><span class="canva-ref">TP · J3-ch6 TP4</span></div>
+        <div class="canva-row"><span class="canva-num">S24</span><span class="canva-slide">Templates Jinja2 — syntaxe {{ }}, {% if %}, {% for %}</span><span class="canva-ref">TP · J3-ch7 TP5</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLES -->
+  <div class="tp-card" id="card-roles">
+    <div class="tp-header" onclick="toggle('card-roles')">
+      <div class="tp-check" id="chk-roles" onclick="checkToggle(event,'chk-roles')"></div>
+      <span class="tp-type type-tp">TP</span>
+      <span class="tp-title">Rôle app-config &amp; handlers</span>
+      <span class="tp-time">13:00 – 14:15</span>
+      <span class="tp-slide">Slides 25–26</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Créer la structure du rôle avec ansible-galaxy role init, puis remplir defaults/main.yml (variables par défaut), tasks/main.yml (créer dossiers + appeler le template), handlers/main.yml (recharger configuration notifié par la tâche template). Appeler le rôle depuis use-role.yml.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/roles/app-config/defaults/main.yml</span><span class="file-desc">Variables par défaut du rôle : app_name, app_version, app_environment, app_port, app_config_dir… La priorité la plus basse — surchargeable depuis le playbook.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/roles/app-config/tasks/main.yml</span><span class="file-desc">7 tâches : debug informatif, création de 3 dossiers, génération de app.conf.j2, génération de config.json.j2, création du log initial avec force:no (idempotence).</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/roles/app-config/handlers/main.yml</span><span class="file-desc">Handler "Recharger configuration" déclenché par notify. S'exécute une seule fois en fin de play. En production, ce serait un service restart.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">ansible/roles/app-config/templates/app.conf.j2</span><span class="file-desc">Template de configuration INI avec filtres Jinja2 : {{ app_enable_debug | lower }}. Généré dans app_config_dir/app.conf.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">ansible/roles/app-config/templates/config.json.j2</span><span class="file-desc">Template JSON généré par le rôle. Complète app.conf.j2 avec un format JSON pour les consommateurs API.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/playbooks/use-role.yml</span><span class="file-desc">Playbook minimal qui appelle le rôle app-config avec surcharge de variables. Montre la syntaxe d'appel d'un rôle.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S25</span><span class="canva-slide">Rôles Ansible — structure, ansible-galaxy, handlers + notions QCM</span><span class="canva-ref">COURS/TP · J4-ch1+ch2</span></div>
+        <div class="canva-row"><span class="canva-num">S26</span><span class="canva-slide">Rôle app-config — code defaults, tasks et handler complets</span><span class="canva-ref">TP · J4-ch2 TP1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TP FINAL -->
+  <div class="tp-card" id="card-final">
+    <div class="tp-header" onclick="toggle('card-final')">
+      <div class="tp-check" id="chk-final" onclick="checkToggle(event,'chk-final')"></div>
+      <span class="tp-type type-final">TP FINAL</span>
+      <span class="tp-title">TP Final — Terraform génère, Ansible consomme</span>
+      <span class="tp-time">14:15 – 15:30</span>
+      <span class="tp-slide">Slide 27</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="tp-body">
+      <p class="tp-desc">Terraform génère servers/server-N.json et l'inventaire ansible/inventories/generated.ini via un templatefile() HCL. Ansible le consomme avec -i inventories/generated.ini. On teste le ping, puis on lance deploy.yml qui génère des configs dans output/. Optionnel : lancer le tout via scripts/deploy.sh.</p>
+      <div class="section-label">Fichiers du dépôt</div>
+      <div class="files-grid">
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">terraform/tp-final/main.tf</span><span class="file-desc">Cœur du TP final : resource local_file "server_info" (N serveurs simulés) + resource local_file "ansible_inventory" qui utilise templatefile() pour générer le INI Ansible.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">terraform/tp-final/templates/inventory.tpl</span><span class="file-desc">Template HCL qui génère le format INI Ansible avec une boucle %{ for ip in servers }. Syntaxe HCL — différente de Jinja2.</span></div>
+        <div class="file-row"><span class="file-icon">📋</span><span class="file-path">ansible/inventories/generated.ini.example</span><span class="file-desc">Exemple du fichier produit par Terraform. Permet aux étudiants de visualiser le format attendu avant de lancer terraform apply.</span></div>
+        <div class="file-row"><span class="file-icon">📄</span><span class="file-path">ansible/playbooks/deploy.yml</span><span class="file-desc">Playbook final : affiche les infos de chaque hôte, crée les dossiers app/logs/config, génère nginx.conf.j2 et app-config.json.j2 pour chaque serveur simulé.</span></div>
+        <div class="file-row"><span class="file-icon">🗂</span><span class="file-path">ansible/templates/nginx.conf.j2</span><span class="file-desc">Template nginx avec bloc conditionnel {% if deploy_environment == 'production' %}. Illustre la différence de rendu entre environnements.</span></div>
+        <div class="file-row"><span class="file-icon">📜</span><span class="file-path">scripts/deploy.sh</span><span class="file-desc">Orchestre les 3 étapes en séquence : terraform init+apply, ansible ping, ansible-playbook deploy.yml. Avec affichage soigné et gestion d'erreur set -e.</span></div>
+      </div>
+      <div class="section-label">Slides Canva associées</div>
+      <div class="canva-grid">
+        <div class="canva-row"><span class="canva-num">S27</span><span class="canva-slide">TP Final — Workflow Terraform → Ansible (2 étapes + sécurité)</span><span class="canva-ref">TP FINAL · J4-ch4+ch5</span></div>
+        <div class="canva-row"><span class="canva-num">S28</span><span class="canva-slide">Révision QCM finale — Terraform / Ansible / Sécurité</span><span class="canva-ref">RÉVISION · J1+J2+J3+J4</span></div>
+      </div>
+      <div class="note-box info">Pour les étudiants en avance : lancer bash scripts/deploy.sh production 3 et observer la différence dans output/ avec 3 serveurs et l'environnement production.</div>
+    </div>
+  </div>
+
+</div><!-- /panel-timeline -->
+
+<!-- ═══════════════════════════════════════════════════════ ARBO -->
+<div class="panel" id="panel-arbo">
+  <div class="day-label">Structure complète du dépôt 3iac1-lab-starter</div>
+  <div class="tree">
+    <div class="tree-item"><span class="tree-name dir">3iac1-lab-starter/</span><span class="tree-tag">racine du projet</span></div>
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name md">README.md</span><span class="tree-tag">démarrage rapide étudiant</span></div>
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name cfg">.gitignore</span><span class="tree-tag">exclut tfstate, output/, *.tfvars</span></div>
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name file">3iac1.code-workspace</span><span class="tree-tag new">nouveau · workspace VSCode</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">.vscode/</span><span class="tree-tag new">nouveau · config VSCode</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name cfg">settings.json</span><span class="tree-tag">associations .tpl .j2 .cfg</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name cfg">extensions.json</span><span class="tree-tag">Terraform, Ansible, Copilot…</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name cfg">tasks.json</span><span class="tree-tag">tâches VSCode (init/plan/apply/ping…)</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">.github/</span><span class="tree-tag new">nouveau · instructions Copilot</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name md">copilot-instructions.md</span><span class="tree-tag">règles IA : local only, no cloud, no sudo</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">.ia/</span><span class="tree-tag new">nouveau · dossier assistants IA</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name md">contexte-projet.md</span><span class="tree-tag">contexte complet pour tous assistants IA</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name md">prompts-etudiants.md</span><span class="tree-tag">bibliothèque de prompts par TP</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name md">guide-formateur-ia.md</span><span class="tree-tag">démos Copilot + règle des 10 min</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">scripts/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name sh">check-env.sh</span><span class="tree-tag">vérifie terraform/ansible/git au démarrage</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name sh">deploy.sh</span><span class="tree-tag">orchestre Terraform + Ansible (TP final)</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name sh">reset.sh</span><span class="tree-tag">remet tout à zéro avec confirmation</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">terraform/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name dir">jour1/</span><span class="tree-tag">TP1 + TP2</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">main.tf</span><span class="tree-tag">provider local + resource local_file</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">variables.tf</span><span class="tree-tag">app_name, environment, demo_password(sensitive)</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">outputs.tf</span><span class="tree-tag">output app_info</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  └─ </span><span class="tree-name cfg">terraform.tfvars.example</span><span class="tree-tag">modèle à copier-renommer</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name dir">jour2/</span><span class="tree-tag">TP3 — module</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">main.tf</span><span class="tree-tag">appel module ×2 : config_dev + config_prod</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  └─ </span><span class="tree-name dir">modules/config-generator/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │     ├─ </span><span class="tree-name file">main.tf</span><span class="tree-tag">resource local_file + templatefile()</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │     ├─ </span><span class="tree-name file">variables.tf</span><span class="tree-tag">inputs : app_name, environment, port…</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │     ├─ </span><span class="tree-name file">outputs.tf</span><span class="tree-tag">outputs : config_path, readme_path</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │     └─ </span><span class="tree-name tpl">templates/config.tpl</span><span class="tree-tag">template HCL → JSON</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name dir">tp-final/</span><span class="tree-tag">TP final — génère l'inventaire Ansible</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name file">main.tf</span><span class="tree-tag">génère servers/*.json + generated.ini</span></div>
+    <div class="tree-item"><span class="tree-indent">│     └─ </span><span class="tree-name tpl">templates/inventory.tpl</span><span class="tree-tag">template HCL → INI Ansible</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">ansible/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name cfg">ansible.cfg</span><span class="tree-tag">inventory, roles_path, host_key_checking=False</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name dir">inventories/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">hosts.ini</span><span class="tree-tag">inventaire statique — TP4, TP5, rôles</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  └─ </span><span class="tree-name tpl">generated.ini.example</span><span class="tree-tag">exemple du fichier généré par Terraform</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name dir">playbooks/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">setup-system.yml</span><span class="tree-tag">TP5 : file + copy + find + debug</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">generate-config.yml</span><span class="tree-tag">Jinja2 : génère config.json</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name file">use-role.yml</span><span class="tree-tag">appelle le rôle app-config</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  └─ </span><span class="tree-name file">deploy.yml</span><span class="tree-tag">TP final : consomme generated.ini</span></div>
+    <div class="tree-item"><span class="tree-indent">│  ├─ </span><span class="tree-name dir">templates/</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  ├─ </span><span class="tree-name tpl">app-config.json.j2</span><span class="tree-tag">template Jinja2 complet (if + for)</span></div>
+    <div class="tree-item"><span class="tree-indent">│  │  └─ </span><span class="tree-name tpl">nginx.conf.j2</span><span class="tree-tag">template nginx avec bloc production</span></div>
+    <div class="tree-item"><span class="tree-indent">│  └─ </span><span class="tree-name dir">roles/app-config/</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name file">defaults/main.yml</span><span class="tree-tag">variables par défaut du rôle</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name file">tasks/main.yml</span><span class="tree-tag">7 tâches : dirs + templates + log</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name file">handlers/main.yml</span><span class="tree-tag">handler "Recharger configuration"</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name tpl">templates/app.conf.j2</span><span class="tree-tag">config INI avec filtres Jinja2</span></div>
+    <div class="tree-item"><span class="tree-indent">│     ├─ </span><span class="tree-name tpl">templates/config.json.j2</span><span class="tree-tag">config JSON générée par le rôle</span></div>
+    <div class="tree-item"><span class="tree-indent">│     └─ </span><span class="tree-name file">meta/main.yml</span><span class="tree-tag">métadonnées Galaxy</span></div>
+    <div class="tree-item"><span class="tree-indent">│</span></div>
+    <div class="tree-item"><span class="tree-indent">├─ </span><span class="tree-name dir">output/</span><span class="tree-tag">fichiers générés — ignorés par Git</span></div>
+    <div class="tree-item"><span class="tree-indent">└─ </span><span class="tree-name dir">servers/</span><span class="tree-tag">métadonnées serveurs simulés — ignorées par Git</span></div>
+  </div>
+</div><!-- /panel-arbo -->
+
+<!-- ═══════════════════════════════════════════════════════ QCM -->
+<div class="panel" id="panel-qcm">
+  <div class="day-label">Notions attendues au QCM final (16h–17h J2)</div>
+  <div class="qcm-grid">
+    <div class="qcm-card">
+      <div class="qcm-theme">TERRAFORM — Cycle de vie</div>
+      <ul class="qcm-items">
+        <li>init, plan, apply, destroy — ordre et rôle</li>
+        <li>+ création · ~ modification · − destruction dans le plan</li>
+        <li>Commande pour voir sans appliquer</li>
+        <li>Commande pour prévisualiser la destruction</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">TERRAFORM — State &amp; sécurité</div>
+      <ul class="qcm-items">
+        <li>Rôle du terraform.tfstate</li>
+        <li>Pourquoi ne pas le committer</li>
+        <li>sensitive = true : effet sur les outputs</li>
+        <li>TF_VAR_xxx : passage de secrets</li>
+        <li>.gitignore : fichiers à exclure</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">TERRAFORM — HCL &amp; modules</div>
+      <ul class="qcm-items">
+        <li>provider, resource, variable, output</li>
+        <li>Interpolation ${var.nom}</li>
+        <li>Différence variable vs output</li>
+        <li>Module : inputs, ressources, outputs</li>
+        <li>Workspace : même code, states séparés</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">ANSIBLE — Inventaire &amp; connexion</div>
+      <ul class="qcm-items">
+        <li>Rôle de l'inventaire</li>
+        <li>ansible_connection=local</li>
+        <li>ansible.cfg : inventory, host_key_checking</li>
+        <li>Commande ping sur tous les hôtes</li>
+        <li>Groupes dans hosts.ini</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">ANSIBLE — Playbooks &amp; modules</div>
+      <ul class="qcm-items">
+        <li>Structure : hosts, become, vars, tasks</li>
+        <li>Modules : file, copy, template, debug, find</li>
+        <li>Idempotence : définition + exemple</li>
+        <li>--check : dry-run Ansible</li>
+        <li>-v : mode verbeux</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">ANSIBLE — Jinja2, rôles &amp; handlers</div>
+      <ul class="qcm-items">
+        <li>{{ variable }} · {% if %} · {% for %}</li>
+        <li>Filtre | default(), | lower</li>
+        <li>Structure d'un rôle (dossiers)</li>
+        <li>ansible-galaxy role init</li>
+        <li>Handler : notify + déclenchement unique</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">INTÉGRATION — Terraform + Ansible</div>
+      <ul class="qcm-items">
+        <li>Terraform : provisioner · Ansible : configurer</li>
+        <li>templatefile() HCL vs template Jinja2</li>
+        <li>-i inventories/generated.ini</li>
+        <li>Fil rouge : Terraform génère → Ansible consomme</li>
+      </ul>
+    </div>
+    <div class="qcm-card">
+      <div class="qcm-theme">SÉCURITÉ — Bonnes pratiques</div>
+      <ul class="qcm-items">
+        <li>Jamais de secret en dur dans le code</li>
+        <li>Jamais de tfstate commité</li>
+        <li>sensitive = true ne chiffre pas le state</li>
+        <li>become: no en environnement local</li>
+        <li>host_key_checking = False en lab uniquement</li>
+      </ul>
+    </div>
+  </div>
+</div><!-- /panel-qcm -->
+
+</div><!-- /content -->
+
+<script>
+  const CHECKS = ['setup','iac','tp1','vars','module','ws','tp4','tp5','roles','final'];
+  const TOTAL = CHECKS.length;
+
+  function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function toggle(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  function checkToggle(e, id) {
+    e.stopPropagation();
+    const el = document.getElementById(id);
+    if (el.classList.contains('done')) {
+      el.classList.remove('done');
+      el.textContent = '';
+    } else {
+      el.classList.add('done');
+      el.textContent = '✓';
+    }
+    updateProgress();
+  }
+
+  function updateProgress() {
+    let done = 0;
+    CHECKS.forEach(k => {
+      if (document.getElementById('chk-' + k)?.classList.contains('done')) done++;
+    });
+    document.getElementById('globalFill').style.width = (done / TOTAL * 100) + '%';
+    document.getElementById('globalCount').textContent = done + ' / ' + TOTAL;
+  }
+</script>
+</body>
+</html>

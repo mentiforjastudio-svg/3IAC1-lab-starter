@@ -1,0 +1,52 @@
+---
+# TP5 — Premier playbook local
+# Crée des dossiers et fichiers locaux, démontre l'idempotence
+- name: Configuration système de base
+  hosts: local
+  become: no
+  vars:
+    app_name: "MonApplication"
+    app_version: "1.0.0"
+    config_dir: "{{ playbook_dir }}/../output/config"
+    log_dir: "{{ playbook_dir }}/../output/logs"
+
+  tasks:
+    - name: Créer le dossier de configuration
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Créer le dossier de logs
+      file:
+        path: "{{ log_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Créer le fichier app.conf
+      copy:
+        content: |
+          APP_NAME={{ app_name }}
+          APP_VERSION={{ app_version }}
+          LOG_DIR={{ log_dir }}
+        dest: "{{ config_dir }}/app.conf"
+        mode: '0644'
+
+    - name: Créer le README
+      copy:
+        content: |
+          # {{ app_name }} v{{ app_version }}
+          Configuration générée par Ansible.
+        dest: "{{ playbook_dir }}/../output/README.md"
+        mode: '0644'
+
+    - name: Lister les fichiers créés
+      find:
+        paths: "{{ playbook_dir }}/../output"
+        recurse: yes
+      register: created_files
+
+    - name: Afficher les fichiers créés
+      debug:
+        msg: "Fichier : {{ item.path }}"
+      loop: "{{ created_files.files }}"

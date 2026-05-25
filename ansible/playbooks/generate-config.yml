@@ -1,0 +1,41 @@
+---
+# Playbook Jinja2 — génère un fichier JSON de configuration depuis un template
+- name: Générer la configuration application
+  hosts: local
+  become: no
+  vars:
+    app_name: "MyWebApp"
+    app_version: "2.1.0"
+    environment: "production"
+    server_port: 3000
+    database_enabled: true
+    db_host: "db.exemple.local"
+    db_port: 5432
+    db_name: "myapp_prod"
+    features:
+      - "user_auth"
+      - "api_v2"
+      - "caching"
+      - "monitoring"
+
+  tasks:
+    - name: Créer le dossier de sortie
+      file:
+        path: "{{ playbook_dir }}/../output/generated"
+        state: directory
+        mode: '0755'
+
+    - name: Générer le fichier de configuration JSON
+      template:
+        src: "{{ playbook_dir }}/../templates/app-config.json.j2"
+        dest: "{{ playbook_dir }}/../output/generated/config.json"
+        mode: '0644'
+
+    - name: Afficher le contenu généré
+      command: cat {{ playbook_dir }}/../output/generated/config.json
+      register: config_content
+      changed_when: false
+
+    - name: Montrer le résultat
+      debug:
+        var: config_content.stdout_lines

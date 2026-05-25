@@ -1,0 +1,108 @@
+{
+  "folders": [
+    {
+      "name": "3IAC1 — Lab Starter",
+      "path": "."
+    }
+  ],
+  "settings": {
+    // ── Éditeur général ──────────────────────────────────────────────────
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [80, 120],
+    "editor.formatOnSave": true,
+    "editor.renderWhitespace": "boundary",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // ── Terraform ────────────────────────────────────────────────────────
+    "[terraform]": {
+      "editor.defaultFormatter": "hashicorp.terraform",
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2
+    },
+    "[terraform-vars]": {
+      "editor.defaultFormatter": "hashicorp.terraform",
+      "editor.formatOnSave": true
+    },
+    "terraform.languageServer.enable": true,
+
+    // ── Ansible ──────────────────────────────────────────────────────────
+    "[ansible]": {
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true
+    },
+    "ansible.validation.enabled": true,
+    "ansible.lightspeed.enabled": false,
+
+    // ── YAML ─────────────────────────────────────────────────────────────
+    "[yaml]": {
+      "editor.defaultFormatter": "redhat.vscode-yaml",
+      "editor.tabSize": 2,
+      "editor.autoIndent": "advanced"
+    },
+    "yaml.validate": true,
+    "yaml.schemas": {
+      "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": [
+        "ansible/playbooks/*.yml",
+        "ansible/roles/*/tasks/*.yml",
+        "ansible/roles/*/handlers/*.yml"
+      ]
+    },
+
+    // ── Shell scripts ────────────────────────────────────────────────────
+    "[shellscript]": {
+      "editor.tabSize": 2
+    },
+
+    // ── Fichiers à exclure de l'explorateur ─────────────────────────────
+    "files.exclude": {
+      "**/.terraform": true,
+      "**/.terraform.lock.hcl": true,
+      "**/output": false,
+      "**/servers": false
+    },
+
+    // ── Recherche : exclure les dossiers générés ─────────────────────────
+    "search.exclude": {
+      "**/.terraform": true,
+      "**/output": true,
+      "**/servers": true
+    },
+
+    // ── Git ──────────────────────────────────────────────────────────────
+    "git.enableSmartCommit": true,
+    "git.autofetch": false,
+
+    // ── Terminal intégré : bash par défaut ───────────────────────────────
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "bash"
+  },
+  "extensions": {
+    "recommendations": [
+      // Terraform
+      "hashicorp.terraform",
+      // Ansible
+      "redhat.ansible",
+      // YAML
+      "redhat.vscode-yaml",
+      // Git
+      "eamodio.gitlens",
+      // GitHub Copilot
+      "github.copilot",
+      "github.copilot-chat",
+      // Qualité shell
+      "timonwong.shellcheck",
+      // Coloration JSON/Jinja
+      "samuelcolvin.jinjahtml",
+      // Icônes
+      "pkief.material-icon-theme"
+    ],
+    "unwantedRecommendations": []
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": []
+  }
+}

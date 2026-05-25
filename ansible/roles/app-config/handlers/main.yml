@@ -1,0 +1,8 @@
+---
+# roles/app-config/handlers/main.yml
+# Les handlers ne s'exécutent qu'une seule fois, en fin de play,
+# et seulement si au moins une tâche les a notifiés avec "notify"
+
+- name: Recharger configuration
+  debug:
+    msg: "Configuration rechargée pour {{ app_name }} — en production, ici on restarterait le service"

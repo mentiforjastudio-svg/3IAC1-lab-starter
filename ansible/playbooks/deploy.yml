@@ -1,0 +1,49 @@
+---
+# TP Final — Playbook principal consommant l'inventaire généré par Terraform
+# Lancement : ansible-playbook -i inventories/generated.ini playbooks/deploy.yml
+- name: Déploiement complet sur les serveurs provisionnés
+  hosts: webservers
+  become: no
+  vars:
+    app_name: "InfraApp"
+    app_version: "2.0.0"
+
+  tasks:
+    - name: Afficher les informations du serveur ciblé
+      debug:
+        msg: >
+          Serveur : {{ inventory_hostname }}
+          | Environnement : {{ deploy_environment | default('inconnu') }}
+
+    - name: Créer les dossiers de l'application
+      file:
+        path: "{{ playbook_dir }}/../../output/{{ inventory_hostname }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - app
+        - logs
+        - config
+
+    - name: Générer la configuration nginx (simulée localement)
+      template:
+        src: "{{ playbook_dir }}/../templates/nginx.conf.j2"
+        dest: "{{ playbook_dir }}/../../output/{{ inventory_hostname }}/config/nginx.conf"
+        mode: '0644'
+
+    - name: Générer la configuration de l'application
+      template:
+        src: "{{ playbook_dir }}/../templates/app-config.json.j2"
+        dest: "{{ playbook_dir }}/../../output/{{ inventory_hostname }}/app/config.json"
+        mode: '0644'
+      vars:
+        environment: "{{ deploy_environment | default('development') }}"
+        server_port: 80
+        database_enabled: false
+        features:
+          - "basic_auth"
+          - "logging"
+
+    - name: Récapitulatif du déploiement
+      debug:
+        msg: "Déploiement terminé sur {{ inventory_hostname }} ({{ deploy_environment | default('dev') }})"

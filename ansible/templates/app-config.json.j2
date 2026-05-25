@@ -1,0 +1,27 @@
+{
+  "application": {
+    "name": "{{ app_name | default('MyApp') }}",
+    "version": "{{ app_version | default('1.0.0') }}",
+    "environment": "{{ environment | default('development') }}"
+  },
+  "server": {
+    "host": "{{ server_host | default('0.0.0.0') }}",
+    "port": {{ server_port | default(8080) }}
+  },
+  "database": {
+{% if database_enabled | default(false) %}
+    "enabled": true,
+    "host": "{{ db_host | default('localhost') }}",
+    "port": {{ db_port | default(5432) }},
+    "name": "{{ db_name | default('myapp') }}"
+{% else %}
+    "enabled": false
+{% endif %}
+  },
+  "features": [
+{% for feature in features | default([]) %}
+    "{{ feature }}"{{ "," if not loop.last else "" }}
+{% endfor %}
+  ],
+  "generated_at": "{{ ansible_date_time.iso8601 | default('unknown') }}"
+}

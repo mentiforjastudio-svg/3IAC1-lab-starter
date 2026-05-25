@@ -1,0 +1,16 @@
+{
+  "name": "{{ app_name }}",
+  "version": "{{ app_version }}",
+  "environment": "{{ app_environment }}",
+  "server": {
+    "port": {{ app_port }}
+  },
+  "logging": {
+    "level": "{{ app_log_level }}",
+    "path": "{{ app_log_dir }}/app.log"
+  },
+  "features": {
+    "debug": {{ app_enable_debug | lower }},
+    "metrics": {{ app_enable_metrics | lower }}
+  }
+}

@@ -1,0 +1,19 @@
+---
+# Playbook utilisant le rôle app-config
+- name: Déployer la configuration via le rôle app-config
+  hosts: local
+  become: no
+  vars:
+    app_config_dir: "{{ playbook_dir }}/../output/myapp/config"
+    app_log_dir: "{{ playbook_dir }}/../output/myapp/logs"
+    app_data_dir: "{{ playbook_dir }}/../output/myapp/data"
+
+  roles:
+    - role: app-config
+      vars:
+        app_name: "MonApplication"
+        app_version: "2.5.0"
+        app_environment: "production"
+        app_port: 3000
+        app_enable_debug: false
+        app_enable_metrics: true
