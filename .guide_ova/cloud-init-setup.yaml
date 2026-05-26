@@ -1,0 +1,82 @@
+#cloud-config
+# Ubuntu 22.04 cloud-init provisioning for 3IAC1 Lab
+# This file configures the VM automatically on first boot
+
+hostname: 3iac1-lab
+fqdn: 3iac1-lab.local
+
+# Update system packages
+package_update: true
+package_upgrade: true
+
+# Install required packages
+packages:
+  - git
+  - curl
+  - wget
+  - gnupg
+  - lsb-release
+  - ca-certificates
+
+# Add HashiCorp repository
+apt:
+  sources:
+    hashicorp:
+      source: deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com jammy main
+      key: |
+        -----BEGIN PGP PUBLIC KEY BLOCK-----
+        
+        mI0EXkiKxAEEAKzrpUIZ1j2KdwzwF0JpXL7sKKmQHlVXf2G/ZpE7hY9aL6tqM8hL
+        hC3s7hRuLMV3nHWyNfvYP9LVmSZmv65B7OqjvC6XSBt2Zf+7/3PNp3R8EoHiQMkF
+        2rQh9D2xJLEqNNuRqwwP3zfRHxpPjGvFYpPfVkAJnvFJQh2FCqvnbHjxABEBAAG0
+        K0hhc2hpQ29ycCBTZWN1cml0eSA8c2VjdXJpdHlAaGFzaGljb3JwLmNvbT6i
+        tQQTBgKAHwUCXkiKxAIbAwIJBBYIAgoHBQkDCQoABQsJCAcDBRYCAwEAAAoJ
+        EJ3Z7Sf1Y9XBQFQD/i1P9T5GvzeFWCKtN3wfxJ0dJEjGaglbDJ2IiqYW4Pt5
+        XlU2JE3CPB5LGGfQIR7m2KV9XPJ0Dk7jZRgzEcvcsI4bnZJqWcqAg2e1nPBw
+        9rqOeLQGTQC8m6n4CVKJ6CAU2CrRMqL8qpX0QJ5j2bJcJMSJLFo8Zb3Z9CbG
+        8hMYDy9H
+        -----END PGP PUBLIC KEY BLOCK-----
+
+# Run commands to install tools
+runcmd:
+  # Verify GPG key
+  - "mkdir -p /usr/share/keyrings"
+  
+  # Install Terraform
+  - "apt-get update && apt-get install -y terraform"
+  
+  # Install Ansible
+  - "apt-get install -y ansible"
+  
+  # Configure git (default config for students)
+  - "git config --system user.name 'Student 3IAC1'"
+  - "git config --system user.email 'student@3iac1.local'"
+  
+  # Create project directory and clone repo
+  - "mkdir -p /home/student/projects"
+  - "cd /home/student/projects && git clone https://github.com/mentiforjastudio-svg/3IAC1-lab-starter.git || echo 'Clone failed - check URL'"
+  
+  # Verify installation
+  - "echo '=== Environment Check ===' >> /var/log/3iac1-setup.log"
+  - "git --version >> /var/log/3iac1-setup.log"
+  - "terraform --version >> /var/log/3iac1-setup.log"
+  - "ansible --version >> /var/log/3iac1-setup.log"
+
+# Create final message
+final_message: |
+  ========================================
+  3IAC1 Lab Environment Ready!
+  ========================================
+  
+  Project location:
+    /home/student/projects/3IAC1-lab-starter
+  
+  Next steps:
+    1. cd /home/student/projects/3IAC1-lab-starter
+    2. bash scripts/check-env.sh
+    3. cd terraform/jour1 && terraform init
+  
+  Check setup log:
+    tail -f /var/log/3iac1-setup.log
+  
+  ========================================
