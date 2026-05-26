@@ -9,6 +9,8 @@ Ce guide explique comment créer une **OVA (Open Virtualization Appliance)** com
 - Environ **50 GB d'espace disque** libre
 - **20-30 minutes** de temps
 
+> Note : cette procédure crée une OVA Ubuntu x86_64 compatible VirtualBox sur Windows/Linux/Mac Intel. Elle n'est pas garantie sur un Mac Apple Silicon natif, qui nécessite un flux UTM ARM64 séparé.
+
 ---
 
 ## Méthode 1 : VirtualBox (Windows, Linux, macOS Intel)
@@ -203,7 +205,14 @@ Dans UTM :
 
 ---
 
+> Note formateur :
+> Distribuer uniquement le fichier **OVA** aux étudiants. Le dossier `.guide_ova` contient des outils et scripts de packaging qui ne sont pas nécessaires pour leur usage.
+
 ## Étape finale : Distribuer l'OVA aux étudiants
+
+> Note formateur : distribuer uniquement le fichier **OVA** aux étudiants. Ce guide et les scripts sont réservés au formateur.
+>
+> Cette OVA est une image x86_64. Elle fonctionne avec VirtualBox sur Windows/Linux/Mac Intel, mais pas avec un Mac Apple Silicon natif à moins d'utiliser une VM ARM64 dédiée.
 
 ### Fichier OVA créé : `3iac1-ubuntu-22.04-prepared.ova`
 
