@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCM — Terraform & Ansible | 3IAC1</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #7c6af7;
+      --accent2: #4fc3f7;
+      --green: #4caf7d;
+      --red: #f05252;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --timer-warn: #f59e0b;
+      --timer-danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ───── HEADER ───── */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .header-left h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .header-left .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .timer-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 24px;
+      min-width: 130px;
+    }
+
+    .timer-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    #timer {
+      font-size: 2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent2);
+      transition: color 0.3s;
+    }
+
+    #timer.warn { color: var(--timer-warn); }
+    #timer.danger { color: var(--timer-danger); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ───── PROGRESS ───── */
+    .progress-bar-wrap {
+      background: var(--surface2);
+      height: 6px;
+      position: sticky;
+      top: 81px;
+      z-index: 99;
+    }
+
+    #progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ───── MAIN LAYOUT ───── */
+    .main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    /* ───── INTRO CARD ───── */
+    .intro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+    }
+
+    .intro-card h2 {
+      font-size: 1rem;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .info-item {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+
+    .info-item .value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .info-item .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ───── QUESTION CARDS ───── */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .question-card:hover {
+      border-color: rgba(124, 106, 247, 0.3);
+    }
+
+    .q-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .q-number {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .q-meta {
+      flex: 1;
+    }
+
+    .q-tag {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .q-text {
+      font-size: 1.02rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .option-label:hover {
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.08);
+    }
+
+    .option-label input[type="radio"] {
+      display: none;
+    }
+
+    .option-label.selected {
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.12);
+    }
+
+    .radio-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--muted);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .option-label.selected .radio-dot {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .radio-dot::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .option-label.selected .radio-dot::after {
+      opacity: 1;
+    }
+
+    .option-letter {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .option-text {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    /* Corrigé highlighting */
+    .option-label.correct {
+      border-color: var(--green) !important;
+      background: rgba(76, 175, 125, 0.12) !important;
+    }
+
+    .option-label.correct .radio-dot {
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .option-label.wrong {
+      border-color: var(--red) !important;
+      background: rgba(240, 82, 82, 0.1) !important;
+    }
+
+    .option-label.wrong .radio-dot {
+      border-color: var(--red);
+    }
+
+    /* ───── SUBMIT ───── */
+    .submit-area {
+      text-align: center;
+      padding: 24px 0 48px;
+    }
+
+    #submit-btn {
+      background: linear-gradient(135deg, var(--accent), #5a6af8);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(124, 106, 247, 0.35);
+    }
+
+    #submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(124, 106, 247, 0.5);
+    }
+
+    #submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ───── SCORE MODAL ───── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .score-ring {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 6px solid var(--accent);
+      position: relative;
+    }
+
+    .score-ring.pass { border-color: var(--green); }
+    .score-ring.fail { border-color: var(--red); }
+
+    .score-value {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .score-denom {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .modal h2 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .modal .verdict {
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+
+    .modal-btn {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #5a6af8);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary:hover { border-color: var(--accent); }
+
+    /* ───── CORRIGÉ SECTION ───── */
+    .corrige-section {
+      display: none;
+    }
+
+    .corrige-section.visible {
+      display: block;
+    }
+
+    .corrige-banner {
+      background: linear-gradient(135deg, rgba(76,175,125,0.15), rgba(79,195,247,0.1));
+      border: 1px solid var(--green);
+      border-radius: 14px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .corrige-banner h3 {
+      color: var(--green);
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .corrige-banner p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ───── PASSWORD GATE ───── */
+    .password-gate {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .password-gate h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--accent2);
+    }
+
+    .password-gate p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 20px;
+    }
+
+    .pass-input-wrap {
+      display: flex;
+      gap: 10px;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+
+    .pass-input-wrap input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+      letter-spacing: 0.15em;
+    }
+
+    .pass-input-wrap input:focus { border-color: var(--accent); }
+    .pass-input-wrap input::placeholder { letter-spacing: 0.02em; color: var(--muted); }
+
+    .pass-input-wrap button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: opacity 0.15s;
+    }
+
+    .pass-input-wrap button:hover { opacity: 0.85; }
+
+    .pass-error {
+      color: var(--red);
+      font-size: 0.82rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.red   { background: var(--red); }
+    .dot.grey  { background: var(--border); }
+
+    /* ───── FOOTER ───── */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ───── TIME UP BANNER ───── */
+    .timeup-banner {
+      display: none;
+      position: fixed;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--red);
+      color: white;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      z-index: 150;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { top: 50px; opacity: 0; }
+      to   { top: 90px; opacity: 1; }
+    }
+
+    code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88em;
+      color: var(--accent2);
+    }
+
+    @media (max-width: 600px) {
+      .header { flex-direction: column; gap: 12px; }
+      .intro-grid { grid-template-columns: 1fr; }
+      .question-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <h1>QCM — Infrastructure as Code <span class="badge">3IAC1</span></h1>
+    <div class="subtitle">Terraform &amp; Ansible · Bachelor 3 · École IT</div>
+  </div>
+  <div class="timer-box">
+    <div class="timer-label">⏱ Temps restant</div>
+    <div id="timer">40:00</div>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar-wrap">
+  <div id="progress-bar"></div>
+</div>
+
+<!-- TIME UP -->
+<div class="timeup-banner" id="timeup-banner">⏰ Temps écoulé — Soumettez votre copie</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- INTRO CARD -->
+  <div class="intro-card">
+    <h2>📋 Consignes</h2>
+    <p style="font-size:0.92rem; color:var(--muted)">
+      Ce QCM est une simulation de l'évaluation finale. Une seule réponse correcte par question.
+      Les réponses ne sont pas visibles pendant l'examen. La barre de progression indique le nombre de questions répondues.
+    </p>
+    <div class="intro-grid">
+      <div class="info-item">
+        <div class="value">20</div>
+        <div class="label">Questions</div>
+      </div>
+      <div class="info-item">
+        <div class="value">40 min</div>
+        <div class="label">Durée</div>
+      </div>
+      <div class="info-item">
+        <div class="value">10/20</div>
+        <div class="label">Note de passage</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div id="quiz-form"></div>
+
+  <!-- SUBMIT -->
+  <div class="submit-area">
+    <button id="submit-btn" onclick="submitQuiz()">Terminer et voir mon score</button>
+    <p id="unanswered-msg" style="margin-top:12px;font-size:0.82rem;color:var(--muted);display:none">
+      ⚠️ <span id="unanswered-count"></span> question(s) sans réponse — vous pouvez quand même soumettre.
+    </p>
+  </div>
+
+  <!-- PASSWORD GATE -->
+  <div class="password-gate" id="password-gate">
+    <h3>🔒 Accès Corrigé — Formateur</h3>
+    <p>Saisissez le code d'accès pour révéler les réponses correctes.</p>
+    <div class="pass-input-wrap">
+      <input type="password" id="pass-input" placeholder="Code d'accès" maxlength="20"
+             onkeydown="if(event.key==='Enter') checkPassword()">
+      <button onclick="checkPassword()">Valider</button>
+    </div>
+    <div class="pass-error" id="pass-error">Code incorrect. Réessayez.</div>
+  </div>
+
+  <!-- CORRIGÉ (hidden until unlocked) -->
+  <div class="corrige-section" id="corrige-section">
+    <div class="corrige-banner">
+      <h3>✅ Corrigé déverrouillé</h3>
+      <p>Les bonnes réponses apparaissent en vert · Vos erreurs éventuelles en rouge.</p>
+    </div>
+    <div class="legend">
+      <span><span class="dot green"></span> Réponse correcte</span>
+      <span><span class="dot red"></span> Mauvaise réponse sélectionnée</span>
+      <span><span class="dot grey"></span> Non sélectionné</span>
+    </div>
+  </div>
+
+</main>
+
+<!-- SCORE MODAL -->
+<div class="modal-overlay" id="score-modal">
+  <div class="modal">
+    <div class="score-ring" id="score-ring">
+      <div class="score-value" id="score-value">—</div>
+      <div class="score-denom">/20</div>
+    </div>
+    <h2 id="score-title">Résultat</h2>
+    <p class="verdict" id="score-verdict"></p>
+    <button class="modal-btn btn-primary" onclick="closeModal()">Voir mes réponses</button>
+    <button class="modal-btn btn-secondary" onclick="closeModal()">Fermer</button>
+  </div>
+</div>
+
+<footer class="footer">3IAC1 – Formation Infrastructure as Code · Terraform &amp; Ansible · 2025-2026</footer>
+
+<script>
+// ─────────────────────────────────────────
+// QUESTIONS DATA
+// ─────────────────────────────────────────
+const questions = [
+  {
+    tag: "Terraform — Cycle de vie",
+    text: "Quelle commande initialise un projet Terraform et télécharge les plugins providers ?",
+    options: ["terraform start", "terraform init", "terraform setup", "terraform get"],
+    correct: 1
+  },
+  {
+    tag: "Terraform — Cycle de vie",
+    text: "Quelle commande affiche les changements prévus <strong>sans les appliquer</strong> ?",
+    options: ["terraform apply", "terraform diff", "terraform plan", "terraform check"],
+    correct: 2
+  },
+  {
+    tag: "Terraform — Cycle de vie",
+    text: "Quelle commande supprime <strong>toutes</strong> les ressources gérées par Terraform ?",
+    options: ["terraform remove", "terraform delete", "terraform clean", "terraform destroy"],
+    correct: 3
+  },
+  {
+    tag: "Terraform — HCL",
+    text: "Quelle syntaxe HCL est correcte pour déclarer une ressource ?",
+    options: [
+      "<code>create \"aws_instance\" \"web\" {}</code>",
+      "<code>define \"aws_instance\" \"web\" {}</code>",
+      "<code>resource \"aws_instance\" \"web\" {}</code>",
+      "<code>instance \"aws\" \"web\" {}</code>"
+    ],
+    correct: 2
+  },
+  {
+    tag: "Terraform — HCL",
+    text: "En Terraform 1.x, quelle expression référence correctement l'attribut <code>id</code> d'une ressource <code>aws_instance</code> nommée <code>web</code> ?",
+    options: [
+      "<code>${aws_instance.web.id}</code>",
+      "<code>aws_instance.web.id</code>",
+      "<code>resource.aws_instance.web.id</code>",
+      "<code>get(\"aws_instance.web.id\")</code>"
+    ],
+    correct: 1
+  },
+  {
+    tag: "Terraform — State",
+    text: "Où doit être stocké le state Terraform dans un environnement d'équipe ?",
+    options: [
+      "En local sur chaque poste développeur",
+      "Dans le dépôt Git avec les fichiers <code>.tf</code>",
+      "Dans un backend distant (ex. S3 + DynamoDB)",
+      "Dans un fichier <code>.env</code> chiffré"
+    ],
+    correct: 2
+  },
+  {
+    tag: "Terraform — State",
+    text: "Dans un backend S3 + DynamoDB, quel est le rôle spécifique de <strong>DynamoDB</strong> ?",
+    options: [
+      "Stocker le state en base de données relationnelle",
+      "Gérer le verrouillage (lock) du state",
+      "Chiffrer le contenu du fichier de state",
+      "Versionner les fichiers de configuration Terraform"
+    ],
+    correct: 1
+  },
+  {
+    tag: "Terraform — Modules",
+    text: "Comment appelle-t-on un module local dans un fichier Terraform ?",
+    options: [
+      "<code>import \"mon_module\" { source = \"./modules/vm\" }</code>",
+      "<code>module \"mon_module\" { source = \"./modules/vm\" }</code>",
+      "<code>include \"mon_module\" { path = \"./modules/vm\" }</code>",
+      "<code>use \"mon_module\" { from = \"./modules/vm\" }</code>"
+    ],
+    correct: 1
+  },
+  {
+    tag: "Terraform — Workspaces",
+    text: "À quoi servent les workspaces Terraform ?",
+    options: [
+      "Organiser les fichiers <code>.tf</code> par sous-dossier",
+      "Configurer les providers par région",
+      "Gérer plusieurs états pour un même code (ex. dev, staging, prod)",
+      "Définir les variables d'environnement système"
+    ],
+    correct: 2
+  },
+  {
+    tag: "Terraform — Commandes",
+    text: "Quelle option de <code>terraform apply</code> approuve automatiquement l'exécution sans prompt interactif ?",
+    options: ["<code>--yes</code>", "<code>-force</code>", "<code>--confirm</code>", "<code>-auto-approve</code>"],
+    correct: 3
+  },
+  {
+    tag: "Ansible — Fondamentaux",
+    text: "Quel format de fichier Ansible utilise-t-il pour les playbooks ?",
+    options: ["JSON", "XML", "YAML", "TOML"],
+    correct: 2
+  },
+  {
+    tag: "Ansible — Inventaire",
+    text: "Quel est le chemin par défaut du fichier d'inventaire statique Ansible ?",
+    options: [
+      "<code>/etc/ansible/servers.cfg</code>",
+      "<code>/etc/ansible/nodes.ini</code>",
+      "<code>/etc/ansible/inventory.yml</code>",
+      "<code>/etc/ansible/hosts</code>"
+    ],
+    correct: 3
+  },
+  {
+    tag: "Ansible — Commandes",
+    text: "Quelle commande permet de lancer un playbook Ansible ?",
+    options: [
+      "<code>ansible run playbook.yml</code>",
+      "<code>ansible-play playbook.yml</code>",
+      "<code>ansible-playbook playbook.yml</code>",
+      "<code>ansible exec playbook.yml</code>"
+    ],
+    correct: 2
+  },
+  {
+    tag: "Ansible — Playbooks",
+    text: "Dans un playbook, à quoi sert le mot-clé <code>become: yes</code> ?",
+    options: [
+      "Activer la connexion SSH sur l'hôte cible",
+      "Forcer la réexécution d'une tâche échouée",
+      "Activer le mode verbeux (debug)",
+      "Élever les privilèges sudo/root sur la machine distante"
+    ],
+    correct: 3
+  },
+  {
+    tag: "Ansible — Modules",
+    text: "Quel module Ansible est <strong>spécifique</strong> à la gestion des paquets sur Debian/Ubuntu ?",
+    options: ["<code>package</code>", "<code>yum</code>", "<code>dnf</code>", "<code>apt</code>"],
+    correct: 3
+  },
+  {
+    tag: "Ansible — Jinja2",
+    text: "Quelle syntaxe Jinja2 permet d'afficher la valeur de la variable <code>server_name</code> dans un template ?",
+    options: [
+      "<code>&lt;% server_name %&gt;</code>",
+      "<code>{{ server_name }}</code>",
+      "<code>[[ server_name ]]</code>",
+      "<code>{# server_name #}</code>"
+    ],
+    correct: 1
+  },
+  {
+    tag: "Ansible — Rôles",
+    text: "Où se situe le fichier principal des tâches d'un rôle Ansible nommé <code>webserver</code> ?",
+    options: [
+      "<code>roles/webserver/playbook.yml</code>",
+      "<code>roles/webserver/index.yml</code>",
+      "<code>roles/webserver/tasks/main.yml</code>",
+      "<code>roles/webserver/run.yml</code>"
+    ],
+    correct: 2
+  },
+  {
+    tag: "Ansible — Galaxy",
+    text: "Quelle commande installe un rôle depuis <strong>Ansible Galaxy</strong> ?",
+    options: [
+      "<code>ansible install geerlingguy.nginx</code>",
+      "<code>ansible-role get geerlingguy.nginx</code>",
+      "<code>galaxy download geerlingguy.nginx</code>",
+      "<code>ansible-galaxy install geerlingguy.nginx</code>"
+    ],
+    correct: 3
+  },
+  {
+    tag: "Ansible — Connexion",
+    text: "Par quel protocole Ansible se connecte-t-il <strong>par défaut</strong> aux machines distantes Linux ?",
+    options: ["WinRM", "Telnet", "SSH", "RDP"],
+    correct: 2
+  },
+  {
+    tag: "Intégration & Sécurité",
+    text: "Dans une chaîne Terraform + Ansible, quel est le rôle typique de <strong>Terraform</strong> ?",
+    options: [
+      "Configurer les logiciels applicatifs sur les serveurs",
+      "Gérer les mises à jour des paquets système",
+      "Provisionner l'infrastructure (VM, réseau, stockage)",
+      "Déployer et versionner les applications"
+    ],
+    correct: 2
+  }
+];
+
+// ─────────────────────────────────────────
+// PASSWORD (modifiable ici)
+// ─────────────────────────────────────────
+const CORRIGE_PASSWORD = "3IAC1";
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let answers = new Array(questions.length).fill(null);
+let timerInterval = null;
+let totalSeconds = 40 * 60;
+let quizSubmitted = false;
+
+// ─────────────────────────────────────────
+// BUILD QUIZ
+// ─────────────────────────────────────────
+function buildQuiz() {
+  const form = document.getElementById('quiz-form');
+  const letters = ['A', 'B', 'C', 'D'];
+
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `q-card-${qi}`;
+
+    card.innerHTML = `
+      <div class="q-header">
+        <div class="q-number">${qi + 1}</div>
+        <div class="q-meta">
+          <span class="q-tag">${q.tag}</span>
+          <div class="q-text">${q.text}</div>
+        </div>
+      </div>
+      <div class="options-list" id="options-${qi}">
+        ${q.options.map((opt, oi) => `
+          <label class="option-label" id="opt-${qi}-${oi}" onclick="selectOption(${qi}, ${oi})">
+            <input type="radio" name="q${qi}" value="${oi}">
+            <span class="radio-dot"></span>
+            <span class="option-letter">${letters[oi]}</span>
+            <span class="option-text">${opt}</span>
+          </label>
+        `).join('')}
+      </div>
+    `;
+
+    form.appendChild(card);
+  });
+}
+
+// ─────────────────────────────────────────
+// SELECT OPTION
+// ─────────────────────────────────────────
+function selectOption(qi, oi) {
+  if (quizSubmitted) return;
+  answers[qi] = oi;
+
+  // update UI
+  for (let i = 0; i < questions[qi].options.length; i++) {
+    const el = document.getElementById(`opt-${qi}-${i}`);
+    el.classList.toggle('selected', i === oi);
+  }
+
+  updateProgress();
+}
+
+// ─────────────────────────────────────────
+// PROGRESS
+// ─────────────────────────────────────────
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  const pct = (answered / questions.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+// ─────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(() => {
+    totalSeconds--;
+    const min = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const sec = String(totalSeconds % 60).padStart(2, '0');
+    const el = document.getElementById('timer');
+    el.textContent = `${min}:${sec}`;
+
+    if (totalSeconds <= 0) {
+      clearInterval(timerInterval);
+      el.textContent = '00:00';
+      document.getElementById('timeup-banner').style.display = 'block';
+    } else if (totalSeconds <= 300) {
+      el.className = 'danger';
+    } else if (totalSeconds <= 600) {
+      el.className = 'warn';
+    }
+  }, 1000);
+}
+
+// ─────────────────────────────────────────
+// SUBMIT
+// ─────────────────────────────────────────
+function submitQuiz() {
+  clearInterval(timerInterval);
+  quizSubmitted = true;
+
+  const unanswered = answers.filter(a => a === null).length;
+  if (unanswered > 0) {
+    const msg = document.getElementById('unanswered-msg');
+    msg.style.display = 'block';
+    document.getElementById('unanswered-count').textContent = unanswered;
+  }
+
+  // Compute score
+  let correct = 0;
+  answers.forEach((ans, qi) => {
+    if (ans === questions[qi].correct) correct++;
+  });
+
+  const score = Math.round((correct / questions.length) * 20);
+  const pass = score >= 10;
+
+  // Update modal
+  document.getElementById('score-value').textContent = score;
+  const ring = document.getElementById('score-ring');
+  ring.className = 'score-ring ' + (pass ? 'pass' : 'fail');
+  document.getElementById('score-title').textContent = pass ? '✅ Validé !' : '❌ Non validé';
+  document.getElementById('score-verdict').textContent =
+    `${correct} / ${questions.length} réponses correctes — Note : ${score}/20 (seuil : 10/20)`;
+
+  document.getElementById('score-modal').classList.add('show');
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('timeup-banner').style.display = 'none';
+}
+
+// ─────────────────────────────────────────
+// CLOSE MODAL
+// ─────────────────────────────────────────
+function closeModal() {
+  document.getElementById('score-modal').classList.remove('show');
+}
+
+// ─────────────────────────────────────────
+// PASSWORD GATE
+// ─────────────────────────────────────────
+function checkPassword() {
+  const input = document.getElementById('pass-input').value.trim();
+  const errEl = document.getElementById('pass-error');
+
+  if (input === CORRIGE_PASSWORD) {
+    errEl.style.display = 'none';
+    document.getElementById('password-gate').style.display = 'none';
+    revealCorrige();
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('pass-input').value = '';
+    document.getElementById('pass-input').focus();
+  }
+}
+
+// ─────────────────────────────────────────
+// REVEAL CORRIGÉ
+// ─────────────────────────────────────────
+function revealCorrige() {
+  document.getElementById('corrige-section').classList.add('visible');
+
+  const letters = ['A', 'B', 'C', 'D'];
+
+  questions.forEach((q, qi) => {
+    const correct = q.correct;
+    const userAns = answers[qi];
+
+    for (let oi = 0; oi < q.options.length; oi++) {
+      const el = document.getElementById(`opt-${qi}-${oi}`);
+      el.classList.remove('selected');
+
+      if (oi === correct) {
+        el.classList.add('correct');
+      } else if (oi === userAns && userAns !== correct) {
+        el.classList.add('wrong');
+      }
+    }
+
+    // Scroll to top of first question
+    document.getElementById('q-card-0').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+// ─────────────────────────────────────────
+// AUTO-UNLOCK VIA URL HASH
+// ─────────────────────────────────────────
+function checkHashUnlock() {
+  if (window.location.hash === '#corrige') {
+    document.getElementById('password-gate').style.display = 'none';
+    revealCorrige();
+  }
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+buildQuiz();
+startTimer();
+updateProgress();
+checkHashUnlock();
+</script>
+</body>
+</html>
