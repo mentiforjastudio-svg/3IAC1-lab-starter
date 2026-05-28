@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TP-QCM — Architecture IaC 3-tiers — 3IAC1</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:1.5rem 1rem}
+    .container{max-width:920px;margin:0 auto}
+
+    /* ── Header ── */
+    header{text-align:center;padding:1.8rem 2rem;background:linear-gradient(135deg,#1e293b,#160b2e);border-radius:16px;border:1px solid #334155;margin-bottom:1.5rem}
+    header h1{font-size:1.7rem;color:#e879f9;margin-bottom:.3rem}
+    header .sub{color:#94a3b8;font-size:.9rem;margin-bottom:1rem}
+    .meta{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .badge{background:#1e293b;border:1px solid #475569;border-radius:8px;padding:.25rem .75rem;font-size:.8rem;color:#c4b5fd}
+
+    /* ── Architecture banner ── */
+    .arch-banner{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;padding:1rem;background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:1.5rem;font-size:.82rem}
+    .arch-zone{padding:.3rem .8rem;border-radius:6px;font-weight:700;font-family:monospace}
+    .z-dmz{background:#2d0a2e;color:#f0abfc;border:1px solid #a21caf}
+    .z-app{background:#1a1f0a;color:#fcd34d;border:1px solid #ca8a04}
+    .z-db{background:#052e16;color:#86efac;border:1px solid #16a34a}
+    .arch-arrow{color:#475569;font-size:1.1rem}
+    .arch-tool{padding:.2rem .6rem;border-radius:4px;font-weight:700;font-family:monospace;font-size:.78rem}
+    .t-tf{background:#3b0764;color:#d8b4fe;border:1px solid #7c3aed}
+    .t-ans{background:#052e16;color:#86efac;border:1px solid #16a34a}
+    .t-test{background:#0c1a2e;color:#7dd3fc;border:1px solid #0369a1}
+
+    /* ── Global actions ── */
+    .actions{display:flex;gap:.8rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center}
+    .btn{padding:.55rem 1.2rem;border:none;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s}
+    .btn-primary{background:#a21caf;color:#fff}.btn-primary:hover{background:#86198f}
+    .btn-success{background:#0369a1;color:#fff}.btn-success:hover{background:#075985}
+    .btn-reset{background:#1e293b;color:#94a3b8;border:1px solid #334155}.btn-reset:hover{background:#334155;color:#e2e8f0}
+
+    /* ── Score ── */
+    .score-zone{display:none;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1.5rem}
+    .score-val{font-size:2.2rem;font-weight:800;color:#e879f9}
+    .score-zone p{color:#94a3b8;margin-top:.3rem}
+
+    /* ── Question cards ── */
+    .qcard{background:#1e293b;border:1px solid #334155;border-radius:14px;margin-bottom:2rem;overflow:hidden}
+    .qcard-head{padding:1.2rem 1.4rem;border-bottom:1px solid #334155;display:flex;align-items:flex-start;gap:.9rem}
+    .step-badge{min-width:64px;text-align:center;padding:.3rem .5rem;border-radius:8px;font-weight:800;font-size:.78rem;font-family:monospace;white-space:nowrap}
+    .s1{background:#3b0764;color:#d8b4fe;border:1px solid #7c3aed}   /* Ansible */
+    .s2{background:#1e0a3b;color:#c4b5fd;border:1px solid #4f46e5}   /* Terraform */
+    .s3{background:#1e0a3b;color:#c4b5fd;border:1px solid #4f46e5}
+    .s4{background:#2d0a2e;color:#f0abfc;border:1px solid #a21caf}   /* Ansible+Vault */
+    .s5{background:#0c1a2e;color:#7dd3fc;border:1px solid #0369a1}   /* Terratest */
+    .qcard-title{font-size:1rem;font-weight:700;color:#f1f5f9;line-height:1.4}
+    .qcard-sub{font-size:.82rem;color:#94a3b8;margin-top:.25rem}
+
+    .qcard-body{padding:1.2rem 1.4rem}
+
+    /* Context box */
+    .ctx-box{background:#0f172a;border-left:3px solid #475569;border-radius:0 6px 6px 0;padding:.75rem 1rem;margin-bottom:1.2rem;font-size:.85rem;color:#94a3b8;line-height:1.6}
+    .ctx-box strong{color:#e2e8f0}
+
+    /* Objective box */
+    .obj-box{background:#0c1a0c;border:1px solid #166534;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem;font-size:.83rem;color:#86efac}
+    .obj-box .label{font-weight:700;color:#22c55e;margin-bottom:.2rem}
+
+    /* Test command */
+    .test-box{background:#0a0f1a;border:1px solid #1e3a5f;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.2rem}
+    .test-box .label{font-size:.75rem;font-weight:700;color:#38bdf8;margin-bottom:.4rem;font-family:monospace}
+    .test-box pre{font-family:'Fira Code',monospace;font-size:.82rem;color:#7dd3fc;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+
+    /* Options */
+    .options-grid{display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.1rem}
+    .opt{border:1px solid #334155;border-radius:10px;overflow:hidden;transition:border-color .15s}
+    .opt:hover{border-color:#a21caf}
+    .opt-header{display:flex;align-items:center;gap:.7rem;padding:.55rem .9rem;background:#0f172a;cursor:pointer}
+    .opt-header input{accent-color:#a21caf;margin-top:1px}
+    .opt-label{font-size:.8rem;font-weight:700;color:#94a3b8;font-family:monospace;min-width:16px}
+    .opt-desc{font-size:.82rem;color:#cbd5e1}
+    .opt-body{background:#060d18;border-top:1px solid #1e293b;overflow-x:auto}
+    .opt-body pre{padding:.8rem 1rem;font-family:'Fira Code',monospace;font-size:.79rem;line-height:1.65;color:#94a3b8;white-space:pre;tab-size:2}
+
+    /* Syntax colors in pre */
+    .k{color:#c4b5fd}   /* keyword / directive */
+    .s{color:#86efac}   /* string */
+    .c{color:#475569;font-style:italic}   /* comment */
+    .v{color:#fcd34d}   /* variable / value */
+    .f{color:#f0abfc}   /* function / attr */
+    .r{color:#f87171}   /* error / wrong */
+    .h{color:#7dd3fc}   /* highlight */
+
+    .opt.correct{border-color:#22c55e!important}
+    .opt.correct .opt-header{background:#052e16}
+    .opt.correct .opt-label{color:#86efac}
+    .opt.incorrect{border-color:#ef4444!important}
+    .opt.incorrect .opt-header{background:#2d0a0a}
+    .opt.incorrect .opt-label{color:#f87171}
+
+    /* Why box in correction */
+    .why-wrong{background:#2d0a0a;border-left:3px solid #ef4444;border-radius:0 6px 6px 0;padding:.5rem .9rem;margin-top:.4rem;font-size:.8rem;color:#fca5a5}
+    .why-right{background:#052e16;border-left:3px solid #22c55e;border-radius:0 6px 6px 0;padding:.5rem .9rem;margin-top:.4rem;font-size:.8rem;color:#86efac}
+
+    /* Correction zone */
+    .correction{display:none;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:1rem;margin-top:.2rem}
+    .correction.visible{display:block}
+    .correction .answer-label{font-weight:700;color:#22c55e;margin-bottom:.7rem;font-size:.9rem}
+    .correction .explication{color:#94a3b8;font-size:.85rem;line-height:1.7}
+
+    .btn-show{background:#334155;color:#94a3b8;border:none;border-radius:6px;padding:.3rem .8rem;font-size:.78rem;cursor:pointer;transition:all .2s}
+    .btn-show:hover{background:#475569;color:#e2e8f0}
+
+    /* Security tag */
+    .tag{display:inline-block;padding:.1em .45em;border-radius:4px;font-size:.72em;font-weight:700;font-family:monospace;vertical-align:middle;margin-left:.3em}
+    .tag-sec{background:#450a0a;color:#f87171;border:1px solid #991b1b}
+    .tag-ok{background:#052e16;color:#86efac;border:1px solid #166534}
+    .tag-warn{background:#431407;color:#fb923c;border:1px solid #9a3412}
+
+    code{background:#1e293b;border:1px solid #334155;border-radius:4px;padding:.1em .3em;font-family:'Fira Code',monospace;font-size:.83em;color:#f0abfc}
+
+    footer{text-align:center;color:#475569;font-size:.78rem;margin-top:2.5rem;padding-top:1rem;border-top:1px solid #1e293b}
+  </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🔗 TP-QCM — Architecture IaC 3-tiers</h1>
+  <p class="sub">Déploiement local réaliste : Docker · Terraform · Ansible · Ansible Vault · Terratest</p>
+  <div class="meta">
+    <span class="badge">📅 28 mai 2026</span>
+    <span class="badge">🎯 5 étapes</span>
+    <span class="badge">⏱ 1h30–2h</span>
+    <span class="badge">🖥️ Sur votre OVA Ubuntu 22.04</span>
+    <span class="badge">📚 3IAC1 — Projet de fin d'études</span>
+  </div>
+</header>
+
+<!-- Architecture Banner -->
+<div class="arch-banner">
+  <span class="arch-tool t-ans">Ansible</span>
+  <span class="arch-arrow">→</span>
+  <span class="arch-zone z-dmz">DMZ · dmz_net</span>
+  <span class="arch-arrow">🔵 Nginx</span>
+  <span class="arch-arrow">→</span>
+  <span class="arch-zone z-app">App · app_net</span>
+  <span class="arch-arrow">🟡 Flask</span>
+  <span class="arch-arrow">→</span>
+  <span class="arch-zone z-db">DB · db_net (isolé)</span>
+  <span class="arch-arrow">🟢 PG + Redis</span>
+  <span style="width:100%;text-align:center;color:#475569;font-size:.75rem">
+    <span class="arch-tool t-tf">Terraform</span> crée les réseaux &amp; conteneurs &nbsp;|&nbsp;
+    <span class="arch-tool t-ans">Ansible</span> configure nginx, déploie l'app, gère les secrets &nbsp;|&nbsp;
+    <span class="arch-tool t-test">Terratest</span> valide l'infrastructure
+  </span>
+</div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="showAll()">📋 Toutes les corrections</button>
+  <button class="btn btn-success" onclick="calcScore()">✅ Valider mon score</button>
+  <button class="btn btn-reset" onclick="resetAll()">🔄 Réinitialiser</button>
+</div>
+
+<div class="score-zone" id="scoreZone">
+  <div class="score-val" id="scoreVal"></div>
+  <p id="scoreMsg"></p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉTAPE 1 — Ansible : Installer Docker sur l'OVA
+     correct : c
+═══════════════════════════════════════════════════ -->
+<div class="qcard" id="q1">
+  <div class="qcard-head">
+    <span class="step-badge s1">ÉTAPE 1<br>Ansible</span>
+    <div>
+      <div class="qcard-title">Installer Docker sur l'OVA via un playbook Ansible</div>
+      <div class="qcard-sub">Prérequis indispensable avant toute utilisation du provider Terraform Docker</div>
+    </div>
+  </div>
+  <div class="qcard-body">
+
+    <div class="ctx-box">
+      <strong>Contexte :</strong> L'OVA est une Ubuntu 22.04 fraîche. Avant que Terraform puisse provisionner
+      des conteneurs Docker, il faut que Docker soit installé et opérationnel. Ansible se charge de cette
+      étape de bootstrap. Trois paquets sont nécessaires : <code>docker.io</code> (le daemon),
+      <code>docker-compose-plugin</code> et <code>python3-docker</code> (requis par le provider Terraform kreuzwerker/docker).
+    </div>
+
+    <div class="obj-box">
+      <div class="label">🎯 Objectif</div>
+      Docker installé, service démarré, utilisateur courant dans le groupe <code>docker</code> (pour éviter le sudo permanent).
+    </div>
+
+    <div class="test-box">
+      <div class="label">▶ TESTEZ SUR VOTRE OVA — après avoir appliqué votre choix :</div>
+      <pre>cd tp-3tiers/ansible
+ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml
+docker --version          # doit afficher Docker 24+
+docker run --rm hello-world   # doit réussir sans sudo</pre>
+    </div>
+
+    <p style="font-size:.85rem;color:#94a3b8;margin-bottom:.8rem">Quel bloc de tâches Ansible est correct pour installer Docker de façon fiable et sécurisée ?</p>
+
+    <div class="options-grid">
+
+      <!-- Option A — WRONG : missing become -->
+      <div class="opt" id="q1-opt-a">
+        <div class="opt-header">
+          <input type="radio" name="q1" value="a" id="q1a">
+          <span class="opt-label">A</span>
+          <span class="opt-desc">Installation apt sans élévation de privilèges</span>
+          <span class="tag tag-sec">FAILLE ?</span>
+        </div>
+        <div class="opt-body"><pre>- <span class="k">name:</span> <span class="s">Installer Docker</span>
+  <span class="k">apt:</span>
+    <span class="f">name:</span> <span class="s">docker.io</span>
+    <span class="f">state:</span> <span class="s">present</span>
+    <span class="f">update_cache:</span> <span class="v">yes</span>
+
+- <span class="k">name:</span> <span class="s">Démarrer Docker</span>
+  <span class="k">service:</span>
+    <span class="f">name:</span> <span class="s">docker</span>
+    <span class="f">state:</span> <span class="s">started</span>
+    <span class="f">enabled:</span> <span class="v">yes</span></pre></div>
+      </div>
+
+      <!-- Option B — WRONG : pip instead of apt -->
+      <div class="opt" id="q1-opt-b">
+        <div class="opt-header">
+          <input type="radio" name="q1" value="b" id="q1b">
+          <span class="opt-label">B</span>
+          <span class="opt-desc">Installation via pip Python</span>
+        </div>
+        <div class="opt-body"><pre>- <span class="k">name:</span> <span class="s">Installer Docker SDK Python</span>
+  <span class="k">pip:</span>
+    <span class="f">name:</span> <span class="s">docker</span>
+    <span class="f">state:</span> <span class="s">present</span>
+  <span class="f">become:</span> <span class="v">yes</span>
+
+- <span class="k">name:</span> <span class="s">Démarrer Docker</span>
+  <span class="k">service:</span>
+    <span class="f">name:</span> <span class="s">docker</span>
+    <span class="f">state:</span> <span class="s">started</span>
+  <span class="f">become:</span> <span class="v">yes</span></pre></div>
+      </div>
+
+      <!-- Option C — CORRECT -->
+      <div class="opt" id="q1-opt-c">
+        <div class="opt-header">
+          <input type="radio" name="q1" value="c" id="q1c">
+          <span class="opt-label">C</span>
+          <span class="opt-desc">Installation complète — 3 paquets + service + groupe</span>
+          <span class="tag tag-ok">PROD-READY</span>
+        </div>
+        <div class="opt-body"><pre>- <span class="k">name:</span> <span class="s">Installer Docker et dépendances</span>
+  <span class="k">apt:</span>
+    <span class="f">name:</span>
+      - <span class="s">docker.io</span>
+      - <span class="s">docker-compose-plugin</span>
+      - <span class="s">python3-docker</span>
+    <span class="f">state:</span> <span class="s">present</span>
+    <span class="f">update_cache:</span> <span class="v">yes</span>
+  <span class="f">become:</span> <span class="v">yes</span>
+
+- <span class="k">name:</span> <span class="s">Démarrer et activer Docker</span>
+  <span class="k">service:</span>
+    <span class="f">name:</span> <span class="s">docker</span>
+    <span class="f">state:</span> <span class="s">started</span>
+    <span class="f">enabled:</span> <span class="v">yes</span>
+  <span class="f">become:</span> <span class="v">yes</span>
+
+- <span class="k">name:</span> <span class="s">Ajouter l'utilisateur au groupe docker</span>
+  <span class="k">user:</span>
+    <span class="f">name:</span> <span class="s">"{{ ansible_user }}"</span>
+    <span class="f">groups:</span> <span class="s">docker</span>
+    <span class="f">append:</span> <span class="v">yes</span>
+  <span class="f">become:</span> <span class="v">yes</span></pre></div>
+      </div>
+
+      <!-- Option D — WRONG : wrong order -->
+      <div class="opt" id="q1-opt-d">
+        <div class="opt-header">
+          <input type="radio" name="q1" value="d" id="q1d">
+          <span class="opt-label">D</span>
+          <span class="opt-desc">Installation avec démarrage du service en premier</span>
+        </div>
+        <div class="opt-body"><pre>- <span class="k">name:</span> <span class="s">Démarrer Docker</span>
+  <span class="k">service:</span>
+    <span class="f">name:</span> <span class="s">docker</span>
+    <span class="f">state:</span> <span class="s">started</span>
+    <span class="f">enabled:</span> <span class="v">yes</span>
+  <span class="f">become:</span> <span class="v">yes</span>
+
+- <span class="k">name:</span> <span class="s">Installer Docker</span>
+  <span class="k">apt:</span>
+    <span class="f">name:</span> <span class="s">docker.io</span>
+    <span class="f">state:</span> <span class="s">present</span>
+  <span class="f">become:</span> <span class="v">yes</span></pre></div>
+      </div>
+
+    </div><!-- /options-grid -->
+
+    <button class="btn-show" onclick="toggleCorr('corr1')">Voir la correction</button>
+    <div class="correction" id="corr1">
+      <div class="answer-label">✅ Bonne réponse : C</div>
+      <div class="explication">
+        <div class="why-right">
+          <strong>C est correct</strong> — Installe les 3 paquets nécessaires en une seule tâche <code>apt</code> (efficace, idempotent),
+          démarre <em>et</em> active Docker au boot (<code>enabled: yes</code>), puis ajoute l'utilisateur au groupe
+          <code>docker</code> avec <code>append: yes</code> pour ne pas écraser ses groupes existants. <code>python3-docker</code>
+          est indispensable : c'est le SDK Python qu'utilise le provider Terraform kreuzwerker/docker pour piloter Docker via l'API.
+        </div>
+        <div class="why-wrong" style="margin-top:.6rem">
+          <strong>A</strong> — Manque <code>become: yes</code> sur les tâches <code>apt</code> et <code>service</code>.
+          Sans élévation de privilèges, la tâche échoue avec <em>Permission denied</em>. Oubli classique.
+        </div>
+        <div class="why-wrong">
+          <strong>B</strong> — <code>pip install docker</code> installe uniquement le SDK Python, <em>pas</em> le daemon Docker.
+          Le service <code>docker</code> n'existerait pas et la tâche <code>service</code> échouerait.
+        </div>
+        <div class="why-wrong">
+          <strong>D</strong> — L'ordre est inversé : on tente de démarrer un service qui n'est pas encore installé.
+          Ansible retournera <em>Could not find the requested service</em>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉTAPE 2 — Terraform : Segmentation réseau Docker
+     correct : a
+═══════════════════════════════════════════════════ -->
+<div class="qcard" id="q2">
+  <div class="qcard-head">
+    <span class="step-badge s2">ÉTAPE 2<br>Terraform</span>
+    <div>
+      <div class="qcard-title">Définir les 3 réseaux Docker avec la bonne segmentation de sécurité</div>
+      <div class="qcard-sub">dmz_net · app_net · db_net — isolation et règles d'accès</div>
+    </div>
+  </div>
+  <div class="qcard-body">
+
+    <div class="ctx-box">
+      <strong>Contexte :</strong> La sécurité réseau est la première ligne de défense. L'architecture impose trois zones :
+      <strong>dmz_net</strong> (nginx accessible de l'hôte), <strong>app_net</strong> (nginx ↔ Flask, invisible de l'extérieur),
+      <strong>db_net</strong> (Flask ↔ PostgreSQL ↔ Redis, <em>complètement isolé</em> — aucun accès Internet possible).
+      Le paramètre <code>internal = true</code> de Docker interdit tout trafic sortant du réseau.
+    </div>
+
+    <div class="obj-box">
+      <div class="label">🎯 Objectif</div>
+      Trois réseaux créés. La base de données ne doit <strong>jamais</strong> être joignable depuis l'extérieur de Docker,
+      même en cas d'erreur de configuration d'un conteneur.
+    </div>
+
+    <div class="test-box">
+      <div class="label">▶ TESTEZ SUR VOTRE OVA :</div>
+      <pre>cd tp-3tiers/terraform &amp;&amp; terraform init &amp;&amp; terraform apply
+docker network ls                        # doit lister dmz_net, app_net, db_net
+docker network inspect db_net | grep Internal   # doit afficher "Internal": true</pre>
+    </div>
+
+    <p style="font-size:.85rem;color:#94a3b8;margin-bottom:.8rem">Quel bloc Terraform définit correctement les 3 réseaux avec la segmentation de sécurité requise ?</p>
+
+    <div class="options-grid">
+
+      <!-- Option A — CORRECT -->
+      <div class="opt" id="q2-opt-a">
+        <div class="opt-header">
+          <input type="radio" name="q2" value="a" id="q2a">
+          <span class="opt-label">A</span>
+          <span class="opt-desc">3 réseaux distincts — db_net isolé avec <code>internal = true</code></span>
+          <span class="tag tag-ok">PROD-READY</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"dmz_net"</span> {
+  <span class="f">name</span> = <span class="s">"dmz_net"</span>
+}
+
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"app_net"</span> {
+  <span class="f">name</span> = <span class="s">"app_net"</span>
+}
+
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"db_net"</span> {
+  <span class="f">name</span>     = <span class="s">"db_net"</span>
+  <span class="f">internal</span> = <span class="v">true</span>  <span class="c"># aucun accès Internet — réseau fermé</span>
+}</pre></div>
+      </div>
+
+      <!-- Option B — WRONG : db_net without internal -->
+      <div class="opt" id="q2-opt-b">
+        <div class="opt-header">
+          <input type="radio" name="q2" value="b" id="q2b">
+          <span class="opt-label">B</span>
+          <span class="opt-desc">3 réseaux sans isolation du réseau base de données</span>
+          <span class="tag tag-sec">FAILLE SÉCU</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"dmz_net"</span> {
+  <span class="f">name</span> = <span class="s">"dmz_net"</span>
+}
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"app_net"</span> {
+  <span class="f">name</span> = <span class="s">"app_net"</span>
+}
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"db_net"</span> {
+  <span class="f">name</span> = <span class="s">"db_net"</span>
+  <span class="c"># internal manquant — DB accessible depuis Internet</span>
+}</pre></div>
+      </div>
+
+      <!-- Option C — WRONG : single network -->
+      <div class="opt" id="q2-opt-c">
+        <div class="opt-header">
+          <input type="radio" name="q2" value="c" id="q2c">
+          <span class="opt-label">C</span>
+          <span class="opt-desc">Réseau unique pour tous les services</span>
+          <span class="tag tag-sec">PAS DE SEGMENTATION</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"main_net"</span> {
+  <span class="f">name</span> = <span class="s">"main_net"</span>
+  <span class="c"># tous les conteneurs sur le même réseau</span>
+  <span class="c"># nginx peut atteindre postgres directement</span>
+}</pre></div>
+      </div>
+
+      <!-- Option D — WRONG : dmz_net with internal -->
+      <div class="opt" id="q2-opt-d">
+        <div class="opt-header">
+          <input type="radio" name="q2" value="d" id="q2d">
+          <span class="opt-label">D</span>
+          <span class="opt-desc">dmz_net et db_net tous deux en <code>internal</code></span>
+          <span class="tag tag-warn">ARCHITECTURE BRISÉE</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"dmz_net"</span> {
+  <span class="f">name</span>     = <span class="s">"dmz_net"</span>
+  <span class="f">internal</span> = <span class="v">true</span>  <span class="c"># ← erreur : nginx ne recevra plus rien</span>
+}
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"app_net"</span> {
+  <span class="f">name</span> = <span class="s">"app_net"</span>
+}
+<span class="k">resource</span> <span class="s">"docker_network"</span> <span class="s">"db_net"</span> {
+  <span class="f">name</span>     = <span class="s">"db_net"</span>
+  <span class="f">internal</span> = <span class="v">true</span>
+}</pre></div>
+      </div>
+
+    </div>
+    <button class="btn-show" onclick="toggleCorr('corr2')">Voir la correction</button>
+    <div class="correction" id="corr2">
+      <div class="answer-label">✅ Bonne réponse : A</div>
+      <div class="explication">
+        <div class="why-right">
+          <strong>A est correct</strong> — Seul <code>db_net</code> est déclaré <code>internal = true</code>.
+          Cela signifie que Docker refuse toute route sortante depuis ce réseau. Un conteneur PostgreSQL
+          compromis ne pourrait pas initier de connexion vers Internet pour exfiltrer des données.
+          <code>dmz_net</code> et <code>app_net</code> restent routables (nécessaire pour puller des images,
+          ou pour que l'app contacte une API externe).
+        </div>
+        <div class="why-wrong" style="margin-top:.6rem">
+          <strong>B</strong> — Sans <code>internal = true</code> sur <code>db_net</code>, la base de données
+          pourrait théoriquement initier des connexions sortantes. En cas de compromission via SQL injection,
+          l'attaquant peut exfiltrer via <em>outbound</em>.
+        </div>
+        <div class="why-wrong">
+          <strong>C</strong> — Zéro segmentation. Nginx pourrait contacter Postgres directement, un bug
+          dans nginx exposerait la DB. Inacceptable en production.
+        </div>
+        <div class="why-wrong">
+          <strong>D</strong> — <code>internal = true</code> sur <code>dmz_net</code> coupe nginx de l'hôte :
+          les requêtes HTTP de l'utilisateur n'arriveraient jamais. L'application est inaccessible.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉTAPE 3 — Terraform : Conteneur PostgreSQL sécurisé
+     correct : d
+═══════════════════════════════════════════════════ -->
+<div class="qcard" id="q3">
+  <div class="qcard-head">
+    <span class="step-badge s3">ÉTAPE 3<br>Terraform</span>
+    <div>
+      <div class="qcard-title">Déclarer le conteneur PostgreSQL — sécurité et persistance</div>
+      <div class="qcard-sub">Réseau isolé · aucun port exposé · volume persistant · restart policy</div>
+    </div>
+  </div>
+  <div class="qcard-body">
+
+    <div class="ctx-box">
+      <strong>Contexte :</strong> PostgreSQL est le service le plus sensible de l'architecture. Trois règles de sécurité
+      s'appliquent : <strong>(1)</strong> il doit être <em>uniquement</em> sur <code>db_net</code>,
+      <strong>(2)</strong> aucun port ne doit être exposé sur l'hôte (le port 5432 ne doit pas apparaître dans
+      <code>docker ps</code>), <strong>(3)</strong> les données doivent survivre à un redémarrage via un volume nommé.
+    </div>
+
+    <div class="obj-box">
+      <div class="label">🎯 Objectif</div>
+      <code>docker ps</code> ne montre pas de port publié pour postgres.
+      <code>docker volume ls</code> montre <code>pg_data</code>.
+      <code>docker inspect postgres | grep Networks</code> ne montre que <code>db_net</code>.
+    </div>
+
+    <div class="test-box">
+      <div class="label">▶ TESTEZ SUR VOTRE OVA :</div>
+      <pre>terraform apply
+docker ps --format "table {{.Names}}\t{{.Ports}}"
+# postgres ne doit pas avoir de port listé (colonne PORTS vide)
+docker exec -it flask_app python -c \
+  "import psycopg2; psycopg2.connect(host='postgres',dbname='app',user='app',password='...')"
+# doit réussir (app sur db_net peut joindre postgres)</pre>
+    </div>
+
+    <p style="font-size:.85rem;color:#94a3b8;margin-bottom:.8rem">Quel bloc Terraform définit le conteneur PostgreSQL de façon correcte et sécurisée ?</p>
+
+    <div class="options-grid">
+
+      <!-- Option A — WRONG : port 5432 exposed -->
+      <div class="opt" id="q3-opt-a">
+        <div class="opt-header">
+          <input type="radio" name="q3" value="a" id="q3a">
+          <span class="opt-label">A</span>
+          <span class="opt-desc">PostgreSQL avec port 5432 mappé sur l'hôte</span>
+          <span class="tag tag-sec">FAILLE SÉCU</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_container"</span> <span class="s">"postgres"</span> {
+  <span class="f">name</span>  = <span class="s">"postgres"</span>
+  <span class="f">image</span> = <span class="s">"postgres:15-alpine"</span>
+
+  <span class="k">networks_advanced</span> { <span class="f">name</span> = <span class="v">docker_network.db_net.name</span> }
+
+  <span class="r">ports</span> {               <span class="c"># ← exposé sur l'hôte !</span>
+    <span class="f">internal</span> = <span class="v">5432</span>
+    <span class="f">external</span> = <span class="v">5432</span>
+  }
+
+  <span class="f">env</span> = [
+    <span class="s">"POSTGRES_DB=${var.db_name}"</span>,
+    <span class="s">"POSTGRES_USER=${var.db_user}"</span>,
+    <span class="s">"POSTGRES_PASSWORD=${var.db_password}"</span>,
+  ]
+
+  <span class="k">volumes</span> {
+    <span class="f">volume_name</span>    = <span class="v">docker_volume.pg_data.name</span>
+    <span class="f">container_path</span> = <span class="s">"/var/lib/postgresql/data"</span>
+  }
+}</pre></div>
+      </div>
+
+      <!-- Option B — WRONG : wrong network -->
+      <div class="opt" id="q3-opt-b">
+        <div class="opt-header">
+          <input type="radio" name="q3" value="b" id="q3b">
+          <span class="opt-label">B</span>
+          <span class="opt-desc">PostgreSQL sur app_net — mauvaise zone réseau</span>
+          <span class="tag tag-sec">MAUVAISE ZONE</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_container"</span> <span class="s">"postgres"</span> {
+  <span class="f">name</span>  = <span class="s">"postgres"</span>
+  <span class="f">image</span> = <span class="s">"postgres:15-alpine"</span>
+
+  <span class="k">networks_advanced</span> { <span class="f">name</span> = <span class="r">docker_network.app_net.name</span> }
+  <span class="c"># ← sur app_net : nginx peut joindre postgres directement</span>
+
+  <span class="f">env</span> = [
+    <span class="s">"POSTGRES_DB=${var.db_name}"</span>,
+    <span class="s">"POSTGRES_USER=${var.db_user}"</span>,
+    <span class="s">"POSTGRES_PASSWORD=${var.db_password}"</span>,
+  ]
+
+  <span class="k">volumes</span> {
+    <span class="f">volume_name</span>    = <span class="v">docker_volume.pg_data.name</span>
+    <span class="f">container_path</span> = <span class="s">"/var/lib/postgresql/data"</span>
+  }
+}</pre></div>
+      </div>
+
+      <!-- Option C — WRONG : no volume -->
+      <div class="opt" id="q3-opt-c">
+        <div class="opt-header">
+          <input type="radio" name="q3" value="c" id="q3c">
+          <span class="opt-label">C</span>
+          <span class="opt-desc">PostgreSQL sans volume persistant</span>
+          <span class="tag tag-warn">PERTE DE DONNÉES</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_container"</span> <span class="s">"postgres"</span> {
+  <span class="f">name</span>  = <span class="s">"postgres"</span>
+  <span class="f">image</span> = <span class="s">"postgres:15-alpine"</span>
+
+  <span class="k">networks_advanced</span> { <span class="f">name</span> = <span class="v">docker_network.db_net.name</span> }
+
+  <span class="f">env</span> = [
+    <span class="s">"POSTGRES_DB=${var.db_name}"</span>,
+    <span class="s">"POSTGRES_USER=${var.db_user}"</span>,
+    <span class="s">"POSTGRES_PASSWORD=${var.db_password}"</span>,
+  ]
+  <span class="c"># volumes {} absent → toutes les données perdues au restart</span>
+}</pre></div>
+      </div>
+
+      <!-- Option D — CORRECT -->
+      <div class="opt" id="q3-opt-d">
+        <div class="opt-header">
+          <input type="radio" name="q3" value="d" id="q3d">
+          <span class="opt-label">D</span>
+          <span class="opt-desc">PostgreSQL — db_net, sans port, volume + restart policy</span>
+          <span class="tag tag-ok">PROD-READY</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">resource</span> <span class="s">"docker_container"</span> <span class="s">"postgres"</span> {
+  <span class="f">name</span>    = <span class="s">"postgres"</span>
+  <span class="f">image</span>   = <span class="s">"postgres:15-alpine"</span>
+  <span class="f">restart</span> = <span class="s">"unless-stopped"</span>  <span class="c"># redémarre si crash</span>
+
+  <span class="k">networks_advanced</span> { <span class="f">name</span> = <span class="v">docker_network.db_net.name</span> }
+  <span class="c"># aucun bloc ports{} → 5432 jamais exposé sur l'hôte</span>
+
+  <span class="f">env</span> = [
+    <span class="s">"POSTGRES_DB=${var.db_name}"</span>,
+    <span class="s">"POSTGRES_USER=${var.db_user}"</span>,
+    <span class="s">"POSTGRES_PASSWORD=${var.db_password}"</span>,
+  ]
+
+  <span class="k">volumes</span> {
+    <span class="f">volume_name</span>    = <span class="v">docker_volume.pg_data.name</span>
+    <span class="f">container_path</span> = <span class="s">"/var/lib/postgresql/data"</span>
+  }
+}</pre></div>
+      </div>
+
+    </div>
+    <button class="btn-show" onclick="toggleCorr('corr3')">Voir la correction</button>
+    <div class="correction" id="corr3">
+      <div class="answer-label">✅ Bonne réponse : D</div>
+      <div class="explication">
+        <div class="why-right">
+          <strong>D est correct</strong> — Trois règles respectées : <strong>(1)</strong> uniquement sur <code>db_net</code>
+          (isolé) ; <strong>(2)</strong> absence de bloc <code>ports {}</code> → le port 5432 ne sera jamais accessible
+          depuis l'hôte ou l'extérieur ; <strong>(3)</strong> volume nommé <code>pg_data</code> monté sur
+          <code>/var/lib/postgresql/data</code> → les données survivent aux redémarrages et aux <code>terraform apply</code>.
+          Le <code>restart = "unless-stopped"</code> garantit la haute disponibilité après un crash.
+        </div>
+        <div class="why-wrong" style="margin-top:.6rem">
+          <strong>A</strong> — <code>external = 5432</code> expose le port sur <em>toutes les interfaces de l'hôte</em>.
+          N'importe quelle machine sur le réseau local peut alors se connecter à PostgreSQL avec les bons credentials.
+          Catastrophique en production.
+        </div>
+        <div class="why-wrong">
+          <strong>B</strong> — Sur <code>app_net</code>, nginx (également sur <code>app_net</code>) pourrait joindre
+          PostgreSQL directement, contournant la couche applicative. La segmentation en 3 zones perd tout son sens.
+        </div>
+        <div class="why-wrong">
+          <strong>C</strong> — Sans volume, les données PostgreSQL sont stockées dans la couche writable du conteneur.
+          Un <code>terraform apply</code> (qui recrée le conteneur) ou un crash Docker efface toutes les données. Inadmissible en production.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉTAPE 4 — Ansible : Nginx + Ansible Vault
+     correct : b
+═══════════════════════════════════════════════════ -->
+<div class="qcard" id="q4">
+  <div class="qcard-head">
+    <span class="step-badge s4">ÉTAPE 4<br>Ansible + Vault</span>
+    <div>
+      <div class="qcard-title">Configurer nginx comme reverse proxy sécurisé + gérer les secrets avec Vault</div>
+      <div class="qcard-sub">Headers sécurité · rate limiting · proxy_pass · chiffrement des secrets</div>
+    </div>
+  </div>
+  <div class="qcard-body">
+
+    <div class="ctx-box">
+      <strong>Contexte :</strong> Nginx est le seul point d'entrée public (le "reverse proxy" / "point d'entrée DMZ").
+      Sa configuration doit : <strong>(1)</strong> <code>proxy_pass</code> vers le <em>nom du conteneur</em> Flask
+      (pas <code>localhost</code> — Docker résout les noms de conteneurs sur le réseau app_net) ;
+      <strong>(2)</strong> masquer la version serveur (<code>server_tokens off</code>) ;
+      <strong>(3)</strong> ajouter les headers de sécurité HTTP ;
+      <strong>(4)</strong> limiter le débit (<code>limit_req</code>). Les mots de passe DB/Redis
+      doivent être chiffrés via <code>ansible-vault encrypt_string</code> — jamais en clair dans Git.
+    </div>
+
+    <div class="obj-box">
+      <div class="label">🎯 Objectif</div>
+      <code>curl -I http://localhost</code> ne révèle pas la version nginx. Les headers
+      <code>X-Frame-Options</code>, <code>X-Content-Type-Options</code> sont présents.
+      Depuis <code>tp-3tiers/ansible/</code> : <code>ansible-vault view group_vars/all.yml</code> montre les secrets chiffrés (<code>!vault</code>).
+    </div>
+
+    <div class="test-box">
+      <div class="label">▶ TESTEZ SUR VOTRE OVA :</div>
+      <pre>cd tp-3tiers/ansible
+ansible-playbook -i inventories/hosts.ini playbooks/04-configure.yml --ask-vault-pass
+curl -I http://localhost          # vérifier les headers
+curl -s http://localhost/         # doit retourner la réponse Flask
+# Test rate limiting (doit bloquer après 10 req/s) :
+for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code}\n" http://localhost; done</pre>
+    </div>
+
+    <p style="font-size:.85rem;color:#94a3b8;margin-bottom:.8rem">Quelle combinaison nginx.conf.j2 + gestion des secrets est correcte pour une configuration production ?</p>
+
+    <div class="options-grid">
+
+      <!-- Option A — WRONG : proxy_pass to localhost -->
+      <div class="opt" id="q4-opt-a">
+        <div class="opt-header">
+          <input type="radio" name="q4" value="a" id="q4a">
+          <span class="opt-label">A</span>
+          <span class="opt-desc">proxy_pass vers localhost + secrets en clair dans vars</span>
+          <span class="tag tag-sec">2 ERREURS</span>
+        </div>
+        <div class="opt-body"><pre><span class="c"># nginx.conf.j2</span>
+<span class="k">server</span> {
+    <span class="f">listen</span> <span class="v">80</span>;
+    <span class="k">location</span> / {
+        <span class="f">proxy_pass</span> <span class="r">http://localhost:5000</span>;  <span class="c"># ← faux en Docker</span>
+        <span class="f">proxy_set_header</span> Host $host;
+    }
+}
+
+<span class="c"># group_vars/all.yml</span>
+<span class="r">db_password: "monMotDePasse123"</span>   <span class="c"># ← en clair dans Git !</span></pre></div>
+      </div>
+
+      <!-- Option B — CORRECT -->
+      <div class="opt" id="q4-opt-b">
+        <div class="opt-header">
+          <input type="radio" name="q4" value="b" id="q4b">
+          <span class="opt-label">B</span>
+          <span class="opt-desc">proxy_pass container name · headers sécu · rate limiting · Vault</span>
+          <span class="tag tag-ok">PROD-READY</span>
+        </div>
+        <div class="opt-body"><pre><span class="c"># nginx.conf.j2</span>
+<span class="k">limit_req_zone</span> $binary_remote_addr <span class="f">zone</span>=app:<span class="v">10m</span> <span class="f">rate</span>=<span class="v">10r/s</span>;
+
+<span class="k">server</span> {
+    <span class="f">listen</span>        <span class="v">80</span>;
+    <span class="f">server_tokens</span> <span class="v">off</span>;   <span class="c"># masque la version nginx</span>
+
+    <span class="f">add_header</span> X-Frame-Options       <span class="s">"SAMEORIGIN"</span>;
+    <span class="f">add_header</span> X-Content-Type-Options <span class="s">"nosniff"</span>;
+    <span class="f">add_header</span> X-XSS-Protection       <span class="s">"1; mode=block"</span>;
+    <span class="f">add_header</span> Referrer-Policy        <span class="s">"strict-origin"</span>;
+
+    <span class="k">location</span> / {
+        <span class="f">limit_req</span>        zone=app <span class="f">burst</span>=<span class="v">20</span> nodelay;
+        <span class="f">proxy_pass</span>       <span class="h">http://flask_app:5000</span>;  <span class="c"># nom conteneur Docker</span>
+        <span class="f">proxy_set_header</span> Host              $host;
+        <span class="f">proxy_set_header</span> X-Real-IP         $remote_addr;
+        <span class="f">proxy_set_header</span> X-Forwarded-For   $proxy_add_x_forwarded_for;
+        <span class="f">proxy_hide_header</span> X-Powered-By;
+    }
+}
+
+<span class="c"># group_vars/all.yml — secrets chiffrés avec ansible-vault</span>
+<span class="c"># ansible-vault encrypt_string 'monMotDePasse123' --name 'db_password'</span>
+<span class="k">db_password:</span> <span class="h">!vault</span> |
+  $ANSIBLE_VAULT;1.1;AES256
+  61383937623466323538316666346339...</pre></div>
+      </div>
+
+      <!-- Option C — WRONG : server_tokens on + no headers -->
+      <div class="opt" id="q4-opt-c">
+        <div class="opt-header">
+          <input type="radio" name="q4" value="c" id="q4c">
+          <span class="opt-label">C</span>
+          <span class="opt-desc">proxy_pass correct mais server_tokens on, sans headers ni vault</span>
+          <span class="tag tag-warn">CONFIG PARTIELLE</span>
+        </div>
+        <div class="opt-body"><pre><span class="c"># nginx.conf.j2</span>
+<span class="k">server</span> {
+    <span class="f">listen</span>        <span class="v">80</span>;
+    <span class="r">server_tokens on</span>;  <span class="c"># ← expose "nginx/1.25.3" dans les headers</span>
+
+    <span class="k">location</span> / {
+        <span class="f">proxy_pass</span>       http://flask_app:5000;
+        <span class="f">proxy_set_header</span> Host $host;
+        <span class="c"># aucun header de sécurité</span>
+    }
+}
+
+<span class="c"># group_vars/all.yml</span>
+<span class="r">db_password: "{{ lookup('env','DB_PASSWORD') }}"</span>
+<span class="c"># dépend d'une variable shell non contrôlée</span></pre></div>
+      </div>
+
+      <!-- Option D — WRONG : proxy to postgres -->
+      <div class="opt" id="q4-opt-d">
+        <div class="opt-header">
+          <input type="radio" name="q4" value="d" id="q4d">
+          <span class="opt-label">D</span>
+          <span class="opt-desc">proxy_pass pointant directement vers PostgreSQL</span>
+          <span class="tag tag-sec">LOGIQUE BRISÉE</span>
+        </div>
+        <div class="opt-body"><pre><span class="c"># nginx.conf.j2</span>
+<span class="k">server</span> {
+    <span class="f">listen</span>        <span class="v">80</span>;
+    <span class="f">server_tokens</span> <span class="v">off</span>;
+
+    <span class="k">location</span> / {
+        <span class="f">proxy_pass</span> <span class="r">http://postgres:5432</span>;
+        <span class="c"># nginx fait du HTTP, postgres attend du SQL binaire</span>
+        <span class="c"># nginx et postgres ne sont pas sur le même réseau</span>
+        <span class="f">proxy_set_header</span> Host $host;
+    }
+}</pre></div>
+      </div>
+
+    </div>
+    <button class="btn-show" onclick="toggleCorr('corr4')">Voir la correction</button>
+    <div class="correction" id="corr4">
+      <div class="answer-label">✅ Bonne réponse : B</div>
+      <div class="explication">
+        <div class="why-right">
+          <strong>B est correct</strong> — Cinq points critiques réunis : <strong>(1)</strong> <code>proxy_pass http://flask_app:5000</code>
+          utilise le <em>nom du conteneur</em> Docker comme hostname — c'est ainsi que fonctionne la résolution DNS interne Docker
+          (via le réseau <code>app_net</code> partagé par nginx et flask_app) ; <strong>(2)</strong> <code>server_tokens off</code>
+          empêche un attaquant de cibler une CVE spécifique à la version nginx ; <strong>(3)</strong> les 4 headers
+          de sécurité HTTP bloquent le clickjacking, le MIME sniffing et les XSS ; <strong>(4)</strong> <code>limit_req</code>
+          protège contre le brute-force et le DDoS applicatif ; <strong>(5)</strong> <code>!vault</code> garantit que
+          les secrets ne transitent jamais en clair dans Git.
+        </div>
+        <div class="why-wrong" style="margin-top:.6rem">
+          <strong>A</strong> — <code>proxy_pass http://localhost:5000</code> : dans Docker, chaque conteneur a son propre
+          <em>localhost</em>. nginx essaierait de joindre son propre port 5000, qui n'existe pas. Erreur 502 garantie.
+        </div>
+        <div class="why-wrong">
+          <strong>C</strong> — <code>server_tokens on</code> expose la version nginx exacte dans chaque réponse HTTP.
+          Un attaquant peut cibler directement les CVE connues de cette version. <code>lookup('env',...)</code>
+          dépend d'une variable shell qui peut ne pas être définie en CI/CD.
+        </div>
+        <div class="why-wrong">
+          <strong>D</strong> — Nginx et postgres ne partagent aucun réseau commun (nginx est sur dmz_net+app_net, postgres sur db_net).
+          De plus, nginx parle HTTP, postgres attend le protocole wire de PostgreSQL — incompatible.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉTAPE 5 — Terratest : Tester l'infrastructure en Go
+     correct : c
+═══════════════════════════════════════════════════ -->
+<div class="qcard" id="q5">
+  <div class="qcard-head">
+    <span class="step-badge s5">ÉTAPE 5<br>Terratest</span>
+    <div>
+      <div class="qcard-title">Valider l'infrastructure avec Terratest (Go)</div>
+      <div class="qcard-sub">Test d'intégration IaC · vérifier les réseaux Docker · tester l'endpoint HTTP</div>
+    </div>
+  </div>
+  <div class="qcard-body">
+
+    <div class="ctx-box">
+      <strong>Contexte :</strong> Terratest est le framework de test Go de référence pour valider l'IaC.
+      Il exécute un <code>terraform apply</code>, vérifie l'état réel de l'infrastructure, puis fait
+      un <code>terraform destroy</code> automatique. Ici, le test doit : <strong>(1)</strong> vérifier
+      que le réseau <code>db_net</code> est bien marqué <code>Internal: true</code> via l'API Docker ;
+      <strong>(2)</strong> vérifier que l'endpoint HTTP nginx répond <code>200 OK</code> ;
+      <strong>(3)</strong> nettoyer après lui avec <code>defer terraform.Destroy()</code>.
+    </div>
+
+    <div class="obj-box">
+      <div class="label">🎯 Objectif</div>
+      <code>go test -v -timeout 10m ./test/</code> passe sans erreur.
+      Le test garantit que la segmentation réseau et le reverse proxy fonctionnent à chaque modification de l'IaC.
+    </div>
+
+    <div class="test-box">
+      <div class="label">▶ TESTEZ SUR VOTRE OVA :</div>
+      <pre>cd tp-3tiers/test/
+go mod init 3iac1-test &amp;&amp; go mod tidy
+# (installe gruntwork-io/terratest et docker/docker)
+go test -v -timeout 10m -run TestInfrastructure3Tiers .</pre>
+    </div>
+
+    <p style="font-size:.85rem;color:#94a3b8;margin-bottom:.8rem">Quel test Terratest valide correctement l'architecture 3-tiers ?</p>
+
+    <div class="options-grid">
+
+      <!-- Option A — WRONG : no defer destroy -->
+      <div class="opt" id="q5-opt-a">
+        <div class="opt-header">
+          <input type="radio" name="q5" value="a" id="q5a">
+          <span class="opt-label">A</span>
+          <span class="opt-desc">Test sans cleanup automatique ni vérification réseau</span>
+          <span class="tag tag-warn">INCOMPLET</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">func</span> <span class="f">TestInfrastructure3Tiers</span>(t *testing.T) {
+    opts := &amp;terraform.Options{
+        <span class="f">TerraformDir</span>: <span class="s">"../terraform"</span>,
+    }
+    terraform.Init(t, opts)
+    terraform.Apply(t, opts)
+
+    <span class="c">// test HTTP basique</span>
+    http.Get(<span class="s">"http://localhost"</span>)
+    <span class="c">// pas de defer Destroy → infra laissée en place après échec</span>
+    <span class="c">// pas de vérification du réseau interne db_net</span>
+}</pre></div>
+      </div>
+
+      <!-- Option B — WRONG : assert wrong -->
+      <div class="opt" id="q5-opt-b">
+        <div class="opt-header">
+          <input type="radio" name="q5" value="b" id="q5b">
+          <span class="opt-label">B</span>
+          <span class="opt-desc">Destroy avant Apply + assertion HTTP incorrecte</span>
+          <span class="tag tag-sec">ERREURS LOGIQUES</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">func</span> <span class="f">TestInfrastructure3Tiers</span>(t *testing.T) {
+    opts := &amp;terraform.Options{
+        <span class="f">TerraformDir</span>: <span class="s">"../terraform"</span>,
+    }
+    <span class="r">terraform.Destroy(t, opts)</span>  <span class="c">// ← détruit avant d'avoir créé</span>
+    <span class="k">defer</span> terraform.Init(t, opts)  <span class="c">// ← init en defer, sens inversé</span>
+
+    terraform.Apply(t, opts)
+
+    resp, _ := http.Get(<span class="s">"http://localhost"</span>)
+    <span class="r">assert.Equal(t, 500, resp.StatusCode)</span>  <span class="c">// ← attend un 500 ?</span>
+}</pre></div>
+      </div>
+
+      <!-- Option C — CORRECT -->
+      <div class="opt" id="q5-opt-c">
+        <div class="opt-header">
+          <input type="radio" name="q5" value="c" id="q5c">
+          <span class="opt-label">C</span>
+          <span class="opt-desc">Apply → defer Destroy · test réseau db_net · test HTTP 200</span>
+          <span class="tag tag-ok">PROD-READY</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">func</span> <span class="f">TestInfrastructure3Tiers</span>(t *testing.T) {
+    opts := &amp;terraform.Options{
+        <span class="f">TerraformDir</span>: <span class="s">"../terraform"</span>,
+    }
+
+    <span class="c">// Cleanup automatique, même en cas d'échec</span>
+    <span class="k">defer</span> terraform.Destroy(t, opts)
+
+    terraform.InitAndApply(t, opts)
+
+    <span class="c">// ── Test 1 : db_net doit être interne (isolé)</span>
+    cli, _ := client.NewClientWithOpts(client.FromEnv)
+    net, _ := cli.NetworkInspect(
+        context.Background(), <span class="s">"db_net"</span>,
+        types.NetworkInspectOptions{},
+    )
+    <span class="f">assert.True</span>(t, net.Internal,
+        <span class="s">"db_net doit être internal=true"</span>)
+
+    <span class="c">// ── Test 2 : nginx doit répondre 200</span>
+    http_helper.HttpGetWithRetry(
+        t,
+        <span class="s">"http://localhost"</span>,
+        <span class="k">nil</span>,
+        <span class="v">200</span>,
+        <span class="s">"OK"</span>,
+        <span class="v">5</span>,
+        <span class="v">10</span>*time.Second,
+    )
+}</pre></div>
+      </div>
+
+      <!-- Option D — WRONG : no Docker check, hardcoded sleep -->
+      <div class="opt" id="q5-opt-d">
+        <div class="opt-header">
+          <input type="radio" name="q5" value="d" id="q5d">
+          <span class="opt-label">D</span>
+          <span class="opt-desc">Test avec sleep fixe au lieu de retry + pas de vérification réseau</span>
+          <span class="tag tag-warn">FRAGILE</span>
+        </div>
+        <div class="opt-body"><pre><span class="k">func</span> <span class="f">TestInfrastructure3Tiers</span>(t *testing.T) {
+    opts := &amp;terraform.Options{
+        <span class="f">TerraformDir</span>: <span class="s">"../terraform"</span>,
+    }
+    <span class="k">defer</span> terraform.Destroy(t, opts)
+    terraform.InitAndApply(t, opts)
+
+    <span class="r">time.Sleep(30 * time.Second)</span>  <span class="c">// ← fragile : dépend de la machine</span>
+
+    resp, err := http.Get(<span class="s">"http://localhost"</span>)
+    <span class="f">require.NoError</span>(t, err)
+    <span class="f">assert.Equal</span>(t, <span class="v">200</span>, resp.StatusCode)
+    <span class="c">// pas de test sur internal=true pour db_net</span>
+}</pre></div>
+      </div>
+
+    </div>
+    <button class="btn-show" onclick="toggleCorr('corr5')">Voir la correction</button>
+    <div class="correction" id="corr5">
+      <div class="answer-label">✅ Bonne réponse : C</div>
+      <div class="explication">
+        <div class="why-right">
+          <strong>C est correct</strong> — Quatre bonnes pratiques Terratest réunies :
+          <strong>(1)</strong> <code>defer terraform.Destroy()</code> placé <em>immédiatement après</em> la déclaration des options
+          garantit le cleanup même si le test panique ; <strong>(2)</strong> <code>InitAndApply</code> regroupe init + apply
+          en une seule call ; <strong>(3)</strong> l'inspection Docker vérifie que <code>db_net.Internal == true</code>
+          — c'est un test de sécurité infrastructure, pas juste un test fonctionnel ;
+          <strong>(4)</strong> <code>HttpGetWithRetry</code> retente N fois avec un délai, robuste aux temps de démarrage
+          variables des conteneurs.
+        </div>
+        <div class="why-wrong" style="margin-top:.6rem">
+          <strong>A</strong> — Sans <code>defer terraform.Destroy()</code>, si le test échoue, l'infrastructure reste
+          en place. Dans une pipeline CI/CD, cela consomme des ressources indéfiniment et pollue les runs suivants.
+        </div>
+        <div class="why-wrong">
+          <strong>B</strong> — <code>terraform.Destroy()</code> avant <code>Apply</code> échoue car il n'y a rien à détruire.
+          Attendre un <code>StatusCode 500</code> comme succès de test est une erreur de logique : on teste que l'app
+          <em>plante</em>, pas qu'elle fonctionne.
+        </div>
+        <div class="why-wrong">
+          <strong>D</strong> — <code>time.Sleep(30s)</code> est une anti-pattern Terratest : trop court sur une machine lente,
+          trop long sur une machine rapide. <code>HttpGetWithRetry</code> avec timeout est toujours préférable.
+          L'absence de test sur <code>internal=true</code> laisse passer une régression de sécurité silencieusement.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="showAll()">📋 Toutes les corrections</button>
+  <button class="btn btn-success" onclick="calcScore()">✅ Valider mon score</button>
+  <button class="btn btn-reset" onclick="resetAll()">🔄 Réinitialiser</button>
+</div>
+
+<footer>
+  TP-QCM généré le 28 mai 2026 — Formation 3IAC1 — Architecture IaC 3-tiers locale<br>
+  Stack : Docker · Terraform (kreuzwerker/docker) · Ansible + Vault · Terratest (Go)<br>
+  Sources : tp-final/main.tf · deploy.yml · contexte-projet.md · documentation Terratest gruntwork-io
+</footer>
+</div><!-- /container -->
+
+<script>
+  const answers = { q1:'c', q2:'a', q3:'d', q4:'b', q5:'c' };
+
+  function toggleCorr(id) {
+    document.getElementById(id).classList.toggle('visible');
+  }
+
+  function showAll() {
+    document.querySelectorAll('.correction').forEach(el => el.classList.add('visible'));
+  }
+
+  function calcScore() {
+    let score = 0;
+    for (const [q, correct] of Object.entries(answers)) {
+      const card = document.getElementById(q);
+      const radio = card.querySelector(`input[type=radio]:checked`);
+      const selected = radio ? radio.value : null;
+      const isOk = selected === correct;
+      if (isOk) score++;
+
+      // Color all options
+      ['a','b','c','d'].forEach(v => {
+        const opt = document.getElementById(`${q}-opt-${v}`);
+        if (!opt) return;
+        opt.classList.remove('correct','incorrect');
+        if (v === correct) opt.classList.add('correct');
+        else if (v === selected && v !== correct) opt.classList.add('incorrect');
+      });
+    }
+
+    const pct = Math.round(score / 5 * 100);
+    document.getElementById('scoreVal').textContent = `${score} / 5 (${pct}%)`;
+    let msg;
+    if (score === 5)      msg = '🎉 Parfait ! Architecture maîtrisée — vous êtes prêt pour la prod.';
+    else if (score >= 3)  msg = '👍 Bon niveau ! Relisez les corrections des étapes ratées.';
+    else                  msg = '📖 Retravaillez les fondamentaux — chaque erreur corrigée est une faille en moins.';
+    document.getElementById('scoreMsg').textContent = msg;
+    const zone = document.getElementById('scoreZone');
+    zone.style.display = 'block';
+    zone.scrollIntoView({ behavior: 'smooth' });
+    showAll();
+  }
+
+  function resetAll() {
+    document.querySelectorAll('input[type=radio]').forEach(i => i.checked = false);
+    ['q1','q2','q3','q4','q5'].forEach(q => {
+      ['a','b','c','d'].forEach(v => {
+        const opt = document.getElementById(`${q}-opt-${v}`);
+        if (opt) opt.classList.remove('correct','incorrect');
+      });
+    });
+    document.querySelectorAll('.correction').forEach(el => el.classList.remove('visible'));
+    document.getElementById('scoreZone').style.display = 'none';
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+</script>
+</body>
+</html>

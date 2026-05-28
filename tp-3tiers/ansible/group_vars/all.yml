@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# group_vars/all.yml — Variables partagées
+# Les secrets sont chiffrés avec Ansible Vault.
+# =============================================================================
+
+# ── Application ───────────────────────────────────────────────────────────────
+app_name: "tp-3tiers"
+deploy_environment: "dev"
+
+# ── Base de données ───────────────────────────────────────────────────────────
+db_name: "appdb"
+db_user: "appuser"
+
+# TODO Q4 : Chiffrer db_password avec Ansible Vault
+# Commande : ansible-vault encrypt_string 'votre_mdp' --name 'db_password'
+# Le résultat ressemble à :
+# db_password: !vault |
+#   $ANSIBLE_VAULT;1.1;AES256
+#   61383930613365336338323866343862...
+db_password: "CHANGER_MOI_ET_CHIFFRER_AVEC_VAULT"
+
+# ── Nginx ─────────────────────────────────────────────────────────────────────
+nginx_port: 80
+flask_upstream: "flask_app:5000"
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+docker_packages:
+  - docker.io
+  - docker-compose-plugin
+  - python3-docker

@@ -1,0 +1,39 @@
+---
+# =============================================================================
+# Playbook 01 — Installation de Docker via Ansible
+# Objectif : préparer l'OVA pour exécuter des conteneurs Docker
+# =============================================================================
+
+- name: "Installation de Docker"
+  hosts: localhost
+  become: yes
+
+  tasks:
+
+    # TODO Q1 : Compléter cette tâche avec le bon module Ansible
+    # Indice : on installe des paquets système sur Ubuntu
+    - name: "Installer Docker et ses dépendances"
+      # TODO : quel module ? quels paramètres ?
+      # Packages à installer : docker.io, docker-compose-plugin, python3-docker
+      # N'oubliez pas update_cache: yes
+
+    - name: "Démarrer et activer le service Docker"
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: "Ajouter l'utilisateur courant au groupe docker"
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: "Vérifier que Docker est fonctionnel"
+      command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: "Afficher la version de Docker"
+      debug:
+        msg: "Docker installé : {{ docker_version.stdout }}"

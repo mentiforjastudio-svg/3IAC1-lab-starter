@@ -1,0 +1,9 @@
+# Copier ce fichier en terraform.tfvars et adapter les valeurs
+# NE PAS committer terraform.tfvars (voir .gitignore)
+
+deploy_environment = "dev"
+db_name            = "appdb"
+db_user            = "appuser"
+
+# db_password : utiliser la variable d'environnement à la place
+# export TF_VAR_db_password="votre_mot_de_passe"

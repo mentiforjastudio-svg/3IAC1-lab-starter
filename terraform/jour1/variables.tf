@@ -1,7 +1,7 @@
 # Déclarer les variables utilisées dans main.tf
 variable "app_name" {
   type    = string
-  default = "demo"
+  default = "my_demo_sensitive_app"
 }
 
 variable "environment" {

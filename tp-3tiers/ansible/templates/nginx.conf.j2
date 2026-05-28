@@ -1,0 +1,37 @@
+# =============================================================================
+# Template Nginx — reverse proxy sécurisé
+# Généré par Ansible depuis templates/nginx.conf.j2
+# =============================================================================
+
+# TODO Q4 : Compléter cette configuration
+# Éléments à ajouter :
+#   - limit_req_zone pour le rate limiting
+#   - server_tokens off
+#   - En-têtes de sécurité (X-Frame-Options, X-Content-Type-Options, etc.)
+#   - proxy_pass vers {{ flask_upstream }}
+#   - proxy_set_header pour transmettre l'IP réelle
+
+# Indice : l'upstream Flask est accessible via la variable {{ flask_upstream }}
+
+limit_req_zone $binary_remote_addr zone=app:10m rate=10r/s;
+
+server {
+    listen {{ nginx_port }};
+
+    # TODO : désactiver la divulgation de la version Nginx
+
+    # TODO : ajouter les en-têtes de sécurité
+
+    location / {
+        # TODO : activer le rate limiting (burst=20 nodelay)
+
+        # TODO : définir proxy_pass (utiliser le nom du conteneur, pas localhost !)
+        proxy_pass http://{{ flask_upstream }};
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+
+        # TODO : masquer l'en-tête X-Powered-By
+    }
+}

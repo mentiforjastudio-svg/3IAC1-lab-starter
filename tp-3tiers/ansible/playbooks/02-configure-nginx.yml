@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Playbook 02 — Configuration Nginx (reverse proxy sécurisé)
+# Objectif : déployer la config Nginx avec les en-têtes de sécurité
+# Prérequis : Docker en cours d'exécution, conteneur nginx démarré par Terraform
+# =============================================================================
+
+- name: "Configuration de Nginx"
+  hosts: localhost
+  become: yes
+
+  vars:
+    nginx_config_dest: "/etc/nginx/conf.d/app.conf"
+
+  tasks:
+
+    - name: "Déployer la configuration Nginx depuis le template"
+      template:
+        src: "../templates/nginx.conf.j2"
+        dest: "{{ nginx_config_dest }}"
+        owner: root
+        group: root
+        mode: "0644"
+      # TODO : quelle différence entre 'template' et 'copy' ?
+      notify: reload_nginx
+
+    - name: "Tester la configuration Nginx"
+      command: docker exec nginx nginx -t
+      register: nginx_test
+      changed_when: false
+
+    - name: "Afficher le résultat du test"
+      debug:
+        msg: "{{ nginx_test.stdout_lines }}"
+
+  handlers:
+    - name: reload_nginx
+      command: docker exec nginx nginx -s reload
