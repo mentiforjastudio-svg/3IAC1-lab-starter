@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QCM Terraform — 3IAC1</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1e293b, #1a1f35);
+      border-radius: 16px;
+      border: 1px solid #334155;
+    }
+    header h1 { font-size: 2rem; color: #7c3aed; margin-bottom: .4rem; }
+    header .subtitle { color: #94a3b8; font-size: .95rem; }
+    header .meta { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    header .badge {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: .3rem .8rem;
+      font-size: .82rem;
+      color: #7dd3fc;
+    }
+    .actions-top {
+      display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center;
+    }
+    .btn {
+      padding: .6rem 1.4rem;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-primary { background: #7c3aed; color: #fff; }
+    .btn-primary:hover { background: #6d28d9; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+    .btn-success { background: #059669; color: #fff; }
+    .btn-success:hover { background: #047857; }
+    .question-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1.4rem;
+      transition: border-color .2s;
+    }
+    .question-card:hover { border-color: #7c3aed; }
+    .question-header {
+      display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1rem;
+    }
+    .q-num {
+      background: #7c3aed; color: #fff;
+      font-weight: 700; font-size: .78rem;
+      padding: .2rem .55rem; border-radius: 6px;
+      white-space: nowrap; margin-top: 2px;
+    }
+    .q-text { font-size: 1rem; font-weight: 600; color: #f1f5f9; line-height: 1.5; }
+    .q-note { font-size: .78rem; color: #f59e0b; margin-top: .3rem; }
+    .options { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+    .option {
+      display: flex; align-items: flex-start; gap: .7rem;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: .65rem 1rem;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .option:hover { background: #1a2540; border-color: #7c3aed; }
+    .option input { margin-top: 2px; accent-color: #7c3aed; }
+    .option label { cursor: pointer; font-size: .93rem; color: #cbd5e1; line-height: 1.45; }
+    .option.correct { background: #052e16; border-color: #22c55e; }
+    .option.correct label { color: #86efac; }
+    .option.incorrect { background: #2d0a0a; border-color: #ef4444; }
+    .option.incorrect label { color: #fca5a5; }
+    .correction-zone {
+      display: none;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: 1rem 1.2rem;
+      margin-top: .5rem; font-size: .88rem; line-height: 1.7;
+    }
+    .correction-zone.visible { display: block; }
+    .correction-zone .answer-label { font-weight: 700; color: #22c55e; margin-bottom: .4rem; }
+    .correction-zone .explication { color: #94a3b8; }
+    .correction-zone .wrong-note { color: #f87171; margin-top: .5rem; }
+    .btn-show {
+      background: #334155; color: #94a3b8;
+      border: none; border-radius: 6px;
+      padding: .35rem .85rem; font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-show:hover { background: #475569; color: #e2e8f0; }
+    .score-zone {
+      display: none;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 1.5rem;
+      text-align: center; margin-bottom: 2rem;
+    }
+    .score-zone .score-val { font-size: 2.5rem; font-weight: 800; color: #7c3aed; }
+    .score-zone p { color: #94a3b8; margin-top: .4rem; }
+    code {
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 4px; padding: .1em .35em;
+      font-family: 'Fira Code', monospace; font-size: .85em; color: #7dd3fc;
+    }
+    footer {
+      text-align: center; color: #475569; font-size: .8rem;
+      margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🟣 QCM Terraform</h1>
+    <p class="subtitle">Révisions pour l'examen — Formation 3IAC1</p>
+    <div class="meta">
+      <span class="badge">📅 28 mai 2026</span>
+      <span class="badge">🎯 20 questions</span>
+      <span class="badge">⏱ ~25 min</span>
+      <span class="badge">📚 Niveau Bachelor 3</span>
+    </div>
+  </header>
+
+  <div class="actions-top">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <div class="score-zone" id="scoreZone">
+    <div class="score-val" id="scoreVal"></div>
+    <p id="scoreMsg"></p>
+  </div>
+
+  <!-- Q1 — correct : d -->
+  <div class="question-card" id="q1">
+    <div class="question-header">
+      <span class="q-num">Q1</span>
+      <div><div class="q-text">Que fait la commande <code>terraform init</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q1" id="q1a" value="a"><label for="q1a">a) Elle génère un plan d'exécution et affiche les ressources à créer</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1b" value="b"><label for="q1b">b) Elle applique les changements décrits dans les fichiers <code>.tf</code></label></div>
+      <div class="option"><input type="radio" name="q1" id="q1c" value="c"><label for="q1c">c) Elle valide la syntaxe des fichiers HCL sans télécharger les plugins</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1d" value="d"><label for="q1d">d) Elle initialise le répertoire de travail, télécharge les providers et les modules</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr1')">Voir la correction</button>
+    <div class="correction-zone" id="corr1">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>terraform init</code> initialise le répertoire courant : il lit le bloc <code>required_providers</code>, télécharge les plugins (providers) depuis le registry et installe les modules référencés. C'est toujours la première commande à exécuter dans un nouveau projet ou après modification des dépendances.</div>
+      <div class="wrong-note">Les autres options décrivent <code>terraform plan</code> (a), <code>terraform apply</code> (b) et <code>terraform validate</code> (c).</div>
+    </div>
+  </div>
+
+  <!-- Q2 — correct : a -->
+  <div class="question-card" id="q2">
+    <div class="question-header">
+      <span class="q-num">Q2</span>
+      <div>
+        <div class="q-text">Dans le bloc suivant, que signifie <code>~&gt; 2.0</code> comme contrainte de version ?</div>
+        <div class="q-note">Code : <code>version = "~&gt; 2.0"</code></div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q2" id="q2a" value="a"><label for="q2a">a) Toute version ≥ 2.0 et &lt; 3.0 (patch autorisé, majeur bloqué)</label></div>
+      <div class="option"><input type="radio" name="q2" id="q2b" value="b"><label for="q2b">b) La version la plus récente disponible au moment du <code>terraform init</code></label></div>
+      <div class="option"><input type="radio" name="q2" id="q2c" value="c"><label for="q2c">c) Exactement la version 2.0, aucune autre</label></div>
+      <div class="option"><input type="radio" name="q2" id="q2d" value="d"><label for="q2d">d) Toute version supérieure ou égale à 2.0, sans limite</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr2')">Voir la correction</button>
+    <div class="correction-zone" id="corr2">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">L'opérateur <code>~&gt;</code> est dit "pessimistic constraint operator". <code>~&gt; 2.0</code> autorise 2.0, 2.1, 2.9… mais bloque 3.0. C'est la forme recommandée pour éviter les breaking changes tout en bénéficiant des correctifs mineurs.</div>
+      <div class="wrong-note">Attention : <code>~&gt; 2.0</code> et <code>~&gt; 2.0.0</code> ne sont pas identiques. Le second n'autoriserait que les patches (2.0.x).</div>
+    </div>
+  </div>
+
+  <!-- Q3 — correct : c -->
+  <div class="question-card" id="q3">
+    <div class="question-header">
+      <span class="q-num">Q3</span>
+      <div><div class="q-text">Quel fichier Terraform stocke l'état courant de l'infrastructure gérée ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q3" id="q3a" value="a"><label for="q3a">a) <code>variables.tf</code></label></div>
+      <div class="option"><input type="radio" name="q3" id="q3b" value="b"><label for="q3b">b) <code>.terraform.lock.hcl</code></label></div>
+      <div class="option"><input type="radio" name="q3" id="q3c" value="c"><label for="q3c">c) <code>terraform.tfstate</code></label></div>
+      <div class="option"><input type="radio" name="q3" id="q3d" value="d"><label for="q3d">d) <code>main.tf</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr3')">Voir la correction</button>
+    <div class="correction-zone" id="corr3">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication"><code>terraform.tfstate</code> est le fichier d'état (state file). Il contient la représentation JSON de toutes les ressources gérées par Terraform : leurs attributs, leurs dépendances, leur ID réel chez le provider. Terraform s'en sert pour calculer le diff lors d'un <code>plan</code>.</div>
+      <div class="wrong-note"><code>.terraform.lock.hcl</code> (b) verrouille les versions des providers, pas l'état de l'infra. Il doit être commité dans Git, contrairement au <code>tfstate</code> qui contient souvent des secrets.</div>
+    </div>
+  </div>
+
+  <!-- Q4 — correct : b + d (multi) -->
+  <div class="question-card" id="q4">
+    <div class="question-header">
+      <span class="q-num">Q4</span>
+      <div>
+        <div class="q-text">Une variable est déclarée avec <code>sensitive = true</code>. Quelles affirmations sont vraies ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q4" id="q4a" value="a"><label for="q4a">a) Elle ne peut pas être utilisée dans un <code>output</code></label></div>
+      <div class="option"><input type="checkbox" name="q4" id="q4b" value="b"><label for="q4b">b) Sa valeur n'apparaît pas dans la sortie de <code>terraform plan</code> ni <code>apply</code></label></div>
+      <div class="option"><input type="checkbox" name="q4" id="q4c" value="c"><label for="q4c">c) Sa valeur n'est jamais stockée dans le fichier <code>tfstate</code></label></div>
+      <div class="option"><input type="checkbox" name="q4" id="q4d" value="d"><label for="q4d">d) Sa valeur peut être passée via la variable d'environnement <code>TF_VAR_&lt;nom&gt;</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr4')">Voir la correction</button>
+    <div class="correction-zone" id="corr4">
+      <div class="answer-label">✅ Bonnes réponses : b) et d)</div>
+      <div class="explication">
+        <strong>b) Vrai</strong> — Terraform masque les valeurs sensibles dans les sorties console avec <code>(sensitive value)</code>.<br>
+        <strong>d) Vrai</strong> — Le mécanisme <code>TF_VAR_nom</code> est la méthode recommandée pour injecter des secrets sans les écrire dans un fichier.<br>
+        <strong>a) Faux</strong> — On peut utiliser une variable sensible dans un output, mais l'output doit lui aussi être déclaré <code>sensitive = true</code>.<br>
+        <strong>c) Faux</strong> — La valeur est tout de même stockée dans le <code>tfstate</code>, en clair. C'est pourquoi le state file doit être sécurisé (chiffrement, backend distant).
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5 — correct : a -->
+  <div class="question-card" id="q5">
+    <div class="question-header">
+      <span class="q-num">Q5</span>
+      <div><div class="q-text">Quelle est la différence entre <code>terraform plan</code> et <code>terraform apply</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q5" id="q5a" value="a"><label for="q5a">a) <code>plan</code> affiche ce qui serait fait sans modifier l'infra ; <code>apply</code> exécute réellement les changements</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5b" value="b"><label for="q5b">b) <code>plan</code> et <code>apply</code> font la même chose, mais <code>apply</code> demande une confirmation</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5c" value="c"><label for="q5c">c) <code>plan</code> crée les ressources, <code>apply</code> les détruit</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5d" value="d"><label for="q5d">d) <code>plan</code> nécessite un backend distant, <code>apply</code> fonctionne en local</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr5')">Voir la correction</button>
+    <div class="correction-zone" id="corr5">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>terraform plan</code> calcule et affiche le diff entre l'état courant (tfstate) et la configuration désirée, sans modifier quoi que ce soit. C'est une étape de revue indispensable. <code>terraform apply</code> exécute réellement les créations/modifications/destructions et met à jour le tfstate.</div>
+      <div class="wrong-note">b) est un piège classique : apply ne fait pas exactement la même chose que plan ; il recalcule le plan ET l'exécute.</div>
+    </div>
+  </div>
+
+  <!-- Q6 — correct : d -->
+  <div class="question-card" id="q6">
+    <div class="question-header">
+      <span class="q-num">Q6</span>
+      <div><div class="q-text">Dans un module, quelle expression retourne le chemin absolu du répertoire contenant le fichier <code>.tf</code> courant ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q6" id="q6a" value="a"><label for="q6a">a) <code>path.cwd</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6b" value="b"><label for="q6b">b) <code>dirname(abspath(path.module))</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6c" value="c"><label for="q6c">c) <code>path.root</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6d" value="d"><label for="q6d">d) <code>path.module</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr6')">Voir la correction</button>
+    <div class="correction-zone" id="corr6">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>path.module</code> retourne le chemin du répertoire où se trouve le module en cours d'évaluation. On s'en sert pour construire des chemins relatifs vers des templates : <code>templatefile("${path.module}/templates/config.tpl", ...)</code>. C'est ce qu'on voit dans les modules du projet.</div>
+      <div class="wrong-note"><code>path.root</code> pointe vers le module racine, et <code>path.cwd</code> vers le répertoire de travail courant — deux notions différentes dans les modules imbriqués.</div>
+    </div>
+  </div>
+
+  <!-- Q7 — correct : c -->
+  <div class="question-card" id="q7">
+    <div class="question-header">
+      <span class="q-num">Q7</span>
+      <div>
+        <div class="q-text">Que produit l'expression suivante dans Terraform ?</div>
+        <div class="q-note"><code>[for i in range(3) : "server-${i}"]</code></div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q7" id="q7a" value="a"><label for="q7a">a) Une erreur, <code>range</code> n'existe pas en HCL</label></div>
+      <div class="option"><input type="radio" name="q7" id="q7b" value="b"><label for="q7b">b) Une map : <code>{"0":"server-0", "1":"server-1", "2":"server-2"}</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7c" value="c"><label for="q7c">c) Une liste : <code>["server-0", "server-1", "server-2"]</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7d" value="d"><label for="q7d">d) Une liste : <code>["server-1", "server-2", "server-3"]</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr7')">Voir la correction</button>
+    <div class="correction-zone" id="corr7">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">La <em>for expression</em> avec crochets <code>[...]</code> produit une liste. <code>range(3)</code> retourne <code>[0, 1, 2]</code>. L'interpolation donne <code>["server-0", "server-1", "server-2"]</code>. Ce pattern est utilisé dans le tp-final : <code>[for i in range(var.instance_count) : "192.168.1.${10 + i}"]</code>.</div>
+      <div class="wrong-note"><code>range</code> commence à 0, donc d) est incorrect. Les accolades <code>{...}</code> produiraient une map, pas les crochets.</div>
+    </div>
+  </div>
+
+  <!-- Q8 — correct : a -->
+  <div class="question-card" id="q8">
+    <div class="question-header">
+      <span class="q-num">Q8</span>
+      <div><div class="q-text">Quel est le rôle du méta-argument <code>count</code> dans une ressource Terraform ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q8" id="q8a" value="a"><label for="q8a">a) Il crée plusieurs instances de la ressource et les indexe via <code>count.index</code></label></div>
+      <div class="option"><input type="radio" name="q8" id="q8b" value="b"><label for="q8b">b) Il spécifie le nombre de workers parallèles pour créer la ressource</label></div>
+      <div class="option"><input type="radio" name="q8" id="q8c" value="c"><label for="q8c">c) Il définit le nombre maximal de tentatives en cas d'erreur lors du provisioning</label></div>
+      <div class="option"><input type="radio" name="q8" id="q8d" value="d"><label for="q8d">d) Il définit la priorité de création de la ressource par rapport aux autres</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr8')">Voir la correction</button>
+    <div class="correction-zone" id="corr8">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>count = N</code> duplique la ressource N fois. Chaque instance est accessible via <code>count.index</code> (0 à N-1). Dans le tp-final : <code>count = var.instance_count</code> et <code>filename = "server-${count.index}.json"</code> permettent de créer N fichiers en une seule déclaration.</div>
+    </div>
+  </div>
+
+  <!-- Q9 — correct : d -->
+  <div class="question-card" id="q9">
+    <div class="question-header">
+      <span class="q-num">Q9</span>
+      <div><div class="q-text">Que se passe-t-il si on exécute <code>terraform destroy</code> sans options supplémentaires ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q9" id="q9a" value="a"><label for="q9a">a) Seules les ressources en erreur sont supprimées</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9b" value="b"><label for="q9b">b) Le state file est supprimé mais les ressources réelles ne sont pas touchées</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9c" value="c"><label for="q9c">c) La commande échoue si aucun backend distant n'est configuré</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9d" value="d"><label for="q9d">d) Terraform affiche un plan de destruction puis demande confirmation avant de supprimer toutes les ressources du state</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr9')">Voir la correction</button>
+    <div class="correction-zone" id="corr9">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>terraform destroy</code> affiche un plan de destruction (équivalent à <code>plan -destroy</code>), puis demande une confirmation interactive. Une fois confirmé, toutes les ressources du state sont détruites dans l'ordre inverse de leurs dépendances. Le flag <code>-auto-approve</code> permet de sauter la confirmation (usage CI/CD).</div>
+    </div>
+  </div>
+
+  <!-- Q10 — correct : c -->
+  <div class="question-card" id="q10">
+    <div class="question-header">
+      <span class="q-num">Q10</span>
+      <div><div class="q-text">Comment appelle-t-on un module dans un fichier <code>main.tf</code> parent ? Quelle syntaxe est correcte ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q10" id="q10a" value="a"><label for="q10a">a) <code>use_module { path = "./modules/config-generator" name = "config_dev" }</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10b" value="b"><label for="q10b">b) <code>import module "./modules/config-generator" as config_dev</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10c" value="c"><label for="q10c">c) <code>module "config_dev" { source = "./modules/config-generator" }</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10d" value="d"><label for="q10d">d) <code>include "config-generator" { source = "./modules/config-generator" }</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr10')">Voir la correction</button>
+    <div class="correction-zone" id="corr10">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">La syntaxe HCL pour appeler un module est <code>module "&lt;nom_logique&gt;" { source = "..." ... }</code>. L'argument <code>source</code> est obligatoire. Tous les autres arguments sont les variables d'entrée du module. On voit cette syntaxe dans <code>jour2/main.tf</code> avec <code>module "config_dev"</code> et <code>module "config_prod"</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q11 — correct : a -->
+  <div class="question-card" id="q11">
+    <div class="question-header">
+      <span class="q-num">Q11</span>
+      <div><div class="q-text">Quelle syntaxe permet d'accéder à l'output <code>config_path</code> du module <code>config_dev</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q11" id="q11a" value="a"><label for="q11a">a) <code>module.config_dev.config_path</code></label></div>
+      <div class="option"><input type="radio" name="q11" id="q11b" value="b"><label for="q11b">b) <code>config_dev.outputs.config_path</code></label></div>
+      <div class="option"><input type="radio" name="q11" id="q11c" value="c"><label for="q11c">c) <code>modules["config_dev"]["config_path"]</code></label></div>
+      <div class="option"><input type="radio" name="q11" id="q11d" value="d"><label for="q11d">d) <code>output.config_dev.config_path</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr11')">Voir la correction</button>
+    <div class="correction-zone" id="corr11">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">Les outputs d'un module sont accessibles avec <code>module.&lt;nom&gt;.&lt;output&gt;</code>. C'est ce qu'on voit dans <code>jour2/main.tf</code> : <code>value = module.config_dev.config_path</code>. Le préfixe <code>module.</code> est obligatoire pour distinguer les références aux modules des références aux ressources directes.</div>
+    </div>
+  </div>
+
+  <!-- Q12 — correct : d -->
+  <div class="question-card" id="q12">
+    <div class="question-header">
+      <span class="q-num">Q12</span>
+      <div><div class="q-text">Que fait la fonction <code>templatefile(path, vars)</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q12" id="q12a" value="a"><label for="q12a">a) Elle crée un provider de type template pour gérer les fichiers de config</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12b" value="b"><label for="q12b">b) Elle génère un fichier sur le disque avec les variables substituées</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12c" value="c"><label for="q12c">c) Elle valide qu'un template est bien formé, sans le rendre</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12d" value="d"><label for="q12d">d) Elle lit un fichier template et retourne son contenu sous forme de chaîne avec les variables interpolées</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr12')">Voir la correction</button>
+    <div class="correction-zone" id="corr12">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>templatefile</code> est une fonction Terraform (pas une ressource) qui lit le fichier au chemin indiqué et retourne une <em>string</em> avec toutes les variables remplacées. On l'utilise dans l'attribut <code>content</code> d'une ressource <code>local_file</code> pour écrire le résultat sur le disque. Voir le module <code>config-generator</code> du projet.</div>
+      <div class="wrong-note">b) est le comportement de la ressource <code>local_file</code>, pas de la fonction <code>templatefile</code> elle-même.</div>
+    </div>
+  </div>
+
+  <!-- Q13 — correct : b -->
+  <div class="question-card" id="q13">
+    <div class="question-header">
+      <span class="q-num">Q13</span>
+      <div><div class="q-text">Quelle est la différence principale entre un <em>workspace</em> Terraform et un <em>module</em> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q13" id="q13a" value="a"><label for="q13a">a) Ce sont des synonymes, les deux termes désignent la même fonctionnalité</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13b" value="b"><label for="q13b">b) Un workspace partage le même code mais a son propre state ; un module est un bloc de code réutilisable</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13c" value="c"><label for="q13c">c) Un workspace est obligatoire, un module est optionnel</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13d" value="d"><label for="q13d">d) Un module gère plusieurs environnements alors qu'un workspace ne gère qu'un seul déploiement</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr13')">Voir la correction</button>
+    <div class="correction-zone" id="corr13">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">Un <strong>workspace</strong> (<code>terraform workspace new dev</code>) garde le même code HCL mais isole l'état dans un state file séparé. Un <strong>module</strong> est un répertoire de fichiers <code>.tf</code> réutilisable : c'est un mécanisme de factorisation du code, pas de l'état. Le projet illustre les deux : dossier <code>jour2 workspace</code> pour les workspaces, <code>modules/config-generator</code> pour les modules.</div>
+    </div>
+  </div>
+
+  <!-- Q14 — correct : c -->
+  <div class="question-card" id="q14">
+    <div class="question-header">
+      <span class="q-num">Q14</span>
+      <div><div class="q-text">Que fait le méta-argument <code>depends_on</code> dans une ressource ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q14" id="q14a" value="a"><label for="q14a">a) Il définit les providers dont la ressource dépend</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14b" value="b"><label for="q14b">b) Il permet d'injecter des valeurs d'une ressource vers une autre sans variable</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14c" value="c"><label for="q14c">c) Il déclare qu'une ressource doit être créée avant une autre, même sans référence directe entre elles</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14d" value="d"><label for="q14d">d) Il force Terraform à recréer la ressource à chaque <code>apply</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr14')">Voir la correction</button>
+    <div class="correction-zone" id="corr14">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication"><code>depends_on</code> force une dépendance explicite quand Terraform ne peut pas l'inférer automatiquement. Dans le tp-final, <code>depends_on = [local_file.server_info]</code> garantit que les fichiers serveur existent avant que l'inventaire Ansible soit généré, même si aucune valeur n'est partagée entre les deux ressources.</div>
+    </div>
+  </div>
+
+  <!-- Q15 — correct : d -->
+  <div class="question-card" id="q15">
+    <div class="question-header">
+      <span class="q-num">Q15</span>
+      <div><div class="q-text">Quelle commande liste les workspaces existants et identifie celui qui est actif ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q15" id="q15a" value="a"><label for="q15a">a) <code>terraform state list</code></label></div>
+      <div class="option"><input type="radio" name="q15" id="q15b" value="b"><label for="q15b">b) <code>terraform env list</code></label></div>
+      <div class="option"><input type="radio" name="q15" id="q15c" value="c"><label for="q15c">c) <code>terraform workspace show</code></label></div>
+      <div class="option"><input type="radio" name="q15" id="q15d" value="d"><label for="q15d">d) <code>terraform workspace list</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr15')">Voir la correction</button>
+    <div class="correction-zone" id="corr15">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>terraform workspace list</code> affiche tous les workspaces et préfixe celui actif d'un astérisque (<code>* dev</code>). <code>terraform workspace show</code> (c) n'affiche que le nom du workspace courant, sans lister les autres. <code>terraform state list</code> (a) liste les ressources dans le state, pas les workspaces.</div>
+    </div>
+  </div>
+
+  <!-- Q16 — correct : b + c + d (multi) -->
+  <div class="question-card" id="q16">
+    <div class="question-header">
+      <span class="q-num">Q16</span>
+      <div>
+        <div class="q-text">Dans quel(s) cas est-il recommandé d'utiliser un <strong>backend distant</strong> pour le state Terraform ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q16" id="q16a" value="a"><label for="q16a">a) Pour rendre les commandes Terraform plus rapides</label></div>
+      <div class="option"><input type="checkbox" name="q16" id="q16b" value="b"><label for="q16b">b) Lorsque plusieurs personnes travaillent sur la même infrastructure</label></div>
+      <div class="option"><input type="checkbox" name="q16" id="q16c" value="c"><label for="q16c">c) Pour éviter de perdre le state file en cas d'accident local</label></div>
+      <div class="option"><input type="checkbox" name="q16" id="q16d" value="d"><label for="q16d">d) Pour bénéficier du verrouillage de state (lock) et éviter les conflits</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr16')">Voir la correction</button>
+    <div class="correction-zone" id="corr16">
+      <div class="answer-label">✅ Bonnes réponses : b), c) et d)</div>
+      <div class="explication">
+        <strong>b) Vrai</strong> — Le backend distant est indispensable en équipe pour partager un état cohérent.<br>
+        <strong>c) Vrai</strong> — Le state local peut être perdu ou corrompu. Un backend distant (avec versioning) protège contre ces accidents.<br>
+        <strong>d) Vrai</strong> — Le mécanisme de lock empêche deux <code>apply</code> simultanés de corrompre l'état.<br>
+        <strong>a) Faux</strong> — Le backend distant n'améliore pas la vitesse ; il peut même alourdir légèrement l'exécution (latence réseau).
+      </div>
+    </div>
+  </div>
+
+  <!-- Q17 — correct : a -->
+  <div class="question-card" id="q17">
+    <div class="question-header">
+      <span class="q-num">Q17</span>
+      <div><div class="q-text">Que contient le fichier <code>.terraform.lock.hcl</code> et pourquoi doit-il être commité dans Git ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q17" id="q17a" value="a"><label for="q17a">a) Il verrouille les versions exactes des providers utilisés pour garantir des builds reproductibles</label></div>
+      <div class="option"><input type="radio" name="q17" id="q17b" value="b"><label for="q17b">b) Il contient les secrets chiffrés pour les providers cloud</label></div>
+      <div class="option"><input type="radio" name="q17" id="q17c" value="c"><label for="q17c">c) Il empêche les autres membres de l'équipe de modifier la configuration Terraform</label></div>
+      <div class="option"><input type="radio" name="q17" id="q17d" value="d"><label for="q17d">d) Il contient l'état de l'infra ; le commiter permet de partager l'état entre développeurs</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr17')">Voir la correction</button>
+    <div class="correction-zone" id="corr17">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>.terraform.lock.hcl</code> enregistre les versions exactes et les hashes de vérification des providers téléchargés lors du <code>terraform init</code>. Le commiter dans Git garantit que tous les membres utilisent exactement les mêmes versions, évitant les divergences. À l'inverse, <code>terraform.tfstate</code> ne doit généralement PAS être commité car il contient des données sensibles.</div>
+    </div>
+  </div>
+
+  <!-- Q18 — correct : b -->
+  <div class="question-card" id="q18">
+    <div class="question-header">
+      <span class="q-num">Q18</span>
+      <div><div class="q-text">Quelle fonction Terraform permet d'encoder un objet en JSON dans un fichier de configuration ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q18" id="q18a" value="a"><label for="q18a">a) <code>encode.json()</code></label></div>
+      <div class="option"><input type="radio" name="q18" id="q18b" value="b"><label for="q18b">b) <code>jsonencode()</code></label></div>
+      <div class="option"><input type="radio" name="q18" id="q18c" value="c"><label for="q18c">c) <code>to_json()</code></label></div>
+      <div class="option"><input type="radio" name="q18" id="q18d" value="d"><label for="q18d">d) <code>json_encode()</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr18')">Voir la correction</button>
+    <div class="correction-zone" id="corr18">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication"><code>jsonencode()</code> est la fonction built-in Terraform qui sérialise un objet HCL en chaîne JSON. On la voit dans le tp-final : <code>content = jsonencode({ id = "server-${count.index}", ip = "...", ... })</code>. Son inverse est <code>jsondecode()</code>. Les noms <code>to_json</code>, <code>json_encode</code>, <code>encode.json</code> n'existent pas en HCL.</div>
+    </div>
+  </div>
+
+  <!-- Q19 — correct : c -->
+  <div class="question-card" id="q19">
+    <div class="question-header">
+      <span class="q-num">Q19</span>
+      <div><div class="q-text">En Terraform, qu'est-ce qu'un <strong>provider</strong> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q19" id="q19a" value="a"><label for="q19a">a) Un fichier de configuration qui définit les variables d'environnement du projet</label></div>
+      <div class="option"><input type="radio" name="q19" id="q19b" value="b"><label for="q19b">b) Un script externe exécuté lors du <code>terraform apply</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19c" value="c"><label for="q19c">c) Un plugin qui définit et gère un ensemble de types de ressources pour un service donné (AWS, Azure, local…)</label></div>
+      <div class="option"><input type="radio" name="q19" id="q19d" value="d"><label for="q19d">d) Un serveur qui héberge le state file Terraform</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr19')">Voir la correction</button>
+    <div class="correction-zone" id="corr19">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">Un provider est un plugin Go qui fait le pont entre Terraform et une API externe. Il expose des types de ressources (<code>aws_instance</code>, <code>local_file</code>…) et des data sources, et implémente les opérations CRUD correspondantes. Dans le projet, on utilise le provider <code>hashicorp/local</code> — équivalent simplifié de ce que serait <code>hashicorp/aws</code> sur un vrai cloud.</div>
+    </div>
+  </div>
+
+  <!-- Q20 — correct : b + c + d (multi) -->
+  <div class="question-card" id="q20">
+    <div class="question-header">
+      <span class="q-num">Q20</span>
+      <div>
+        <div class="q-text">Dans la chaîne Terraform → Ansible, quel est l'intérêt de générer l'inventaire Ansible <em>depuis</em> Terraform (comme dans le tp-final) ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q20" id="q20a" value="a"><label for="q20a">a) Ansible devient inutile grâce aux templates Terraform</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20b" value="b"><label for="q20b">b) L'inventaire reflète exactement les ressources créées, sans saisie manuelle des IPs</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20c" value="c"><label for="q20c">c) Le fichier d'inventaire est automatiquement mis à jour si <code>instance_count</code> change</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20d" value="d"><label for="q20d">d) Cela garantit la cohérence entre le provisionning (Terraform) et la configuration (Ansible)</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr20')">Voir la correction</button>
+    <div class="correction-zone" id="corr20">
+      <div class="answer-label">✅ Bonnes réponses : b), c) et d)</div>
+      <div class="explication">
+        <strong>b) Vrai</strong> — Terraform connaît exactement les ressources créées et écrit un inventaire précis, sans risque d'erreur humaine.<br>
+        <strong>c) Vrai</strong> — Si on augmente <code>instance_count</code> et relance <code>apply</code>, l'inventaire est régénéré automatiquement avec les nouvelles IPs.<br>
+        <strong>d) Vrai</strong> — C'est le cœur de la philosophie IaC : source de vérité unique, chaîne d'outils cohérente de bout en bout.<br>
+        <strong>a) Faux</strong> — Terraform gère le provisionning, Ansible la configuration logicielle. Ce sont des rôles complémentaires, pas substituables.
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-top" style="margin-top:2rem">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <footer>
+    QCM généré le 28 mai 2026 — Formation 3IAC1 — Terraform &amp; IaC<br>
+    Sources : supports de cours 3IAC1, fichiers terraform/jour1, jour2, tp-final du projet lab-starter
+  </footer>
+</div>
+
+<script>
+  const answers = {
+    q1:  ['d'],
+    q2:  ['a'],
+    q3:  ['c'],
+    q4:  ['b','d'],
+    q5:  ['a'],
+    q6:  ['d'],
+    q7:  ['c'],
+    q8:  ['a'],
+    q9:  ['d'],
+    q10: ['c'],
+    q11: ['a'],
+    q12: ['d'],
+    q13: ['b'],
+    q14: ['c'],
+    q15: ['d'],
+    q16: ['b','c','d'],
+    q17: ['a'],
+    q18: ['b'],
+    q19: ['c'],
+    q20: ['b','c','d']
+  };
+
+  function toggleCorrection(id) {
+    document.getElementById(id).classList.toggle('visible');
+  }
+
+  function showAll() {
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.add('visible'));
+  }
+
+  function calcScore() {
+    let score = 0;
+    for (let [q, correct] of Object.entries(answers)) {
+      const card = document.getElementById(q);
+      const isMulti = correct.length > 1;
+      let selected;
+      if (isMulti) {
+        selected = [...card.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+      } else {
+        const radio = card.querySelector('input[type=radio]:checked');
+        selected = radio ? [radio.value] : [];
+      }
+      const isCorrect = correct.length === selected.length && correct.every(v => selected.includes(v));
+      card.querySelectorAll('.option').forEach(opt => {
+        const inp = opt.querySelector('input');
+        opt.classList.remove('correct', 'incorrect');
+        if (correct.includes(inp.value)) opt.classList.add('correct');
+        else if (selected.includes(inp.value)) opt.classList.add('incorrect');
+      });
+      if (isCorrect) score++;
+    }
+    const pct = Math.round(score / 20 * 100);
+    document.getElementById('scoreVal').textContent = `${score} / 20 (${pct}%)`;
+    let msg = pct >= 80 ? '🎉 Excellent ! Vous maîtrisez bien Terraform.'
+            : pct >= 60 ? '👍 Bon niveau ! Quelques points à revoir.'
+            : '📖 Continuez à réviser, les bases méritent d\'être consolidées.';
+    document.getElementById('scoreMsg').textContent = msg;
+    const zone = document.getElementById('scoreZone');
+    zone.style.display = 'block';
+    zone.scrollIntoView({ behavior: 'smooth' });
+    showAll();
+  }
+
+  function resetAll() {
+    document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(i => i.checked = false);
+    document.querySelectorAll('.option').forEach(o => o.classList.remove('correct','incorrect'));
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.remove('visible'));
+    document.getElementById('scoreZone').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

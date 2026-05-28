@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QCM Terraform + Ansible — 3IAC1</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1e293b, #1a1520);
+      border-radius: 16px;
+      border: 1px solid #334155;
+    }
+    header h1 { font-size: 1.9rem; color: #e879f9; margin-bottom: .4rem; }
+    header .subtitle { color: #94a3b8; font-size: .95rem; }
+    header .meta { display: flex; gap: 1.2rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    header .badge {
+      background: #1e293b; border: 1px solid #475569;
+      border-radius: 8px; padding: .3rem .8rem;
+      font-size: .82rem; color: #e879f9;
+    }
+    .chain-banner {
+      display: flex; align-items: center; justify-content: center;
+      gap: .6rem; margin-bottom: 2rem; flex-wrap: wrap;
+      font-size: .9rem; font-weight: 600;
+    }
+    .chain-pill {
+      padding: .4rem 1rem; border-radius: 20px;
+      font-size: .85rem; font-weight: 700;
+    }
+    .pill-tf { background: #3b0764; color: #d8b4fe; border: 1px solid #7c3aed; }
+    .pill-ans { background: #052e16; color: #86efac; border: 1px solid #16a34a; }
+    .pill-arrow { color: #94a3b8; font-size: 1.2rem; }
+    .actions-top { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center; }
+    .btn { padding: .6rem 1.4rem; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .btn-primary { background: #a21caf; color: #fff; }
+    .btn-primary:hover { background: #86198f; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+    .btn-success { background: #0369a1; color: #fff; }
+    .btn-success:hover { background: #075985; }
+    .question-card {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 1.4rem 1.6rem;
+      margin-bottom: 1.4rem; transition: border-color .2s;
+    }
+    .question-card:hover { border-color: #a21caf; }
+    .question-header { display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1rem; }
+    .q-num { background: #a21caf; color: #fff; font-weight: 700; font-size: .78rem; padding: .2rem .55rem; border-radius: 6px; white-space: nowrap; margin-top: 2px; }
+    .q-text { font-size: 1rem; font-weight: 600; color: #f1f5f9; line-height: 1.5; }
+    .q-note { font-size: .78rem; color: #f59e0b; margin-top: .3rem; }
+    .options { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+    .option {
+      display: flex; align-items: flex-start; gap: .7rem;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: .65rem 1rem;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .option:hover { background: #160b1e; border-color: #a21caf; }
+    .option input { margin-top: 2px; accent-color: #a21caf; }
+    .option label { cursor: pointer; font-size: .93rem; color: #cbd5e1; line-height: 1.45; }
+    .option.correct { background: #052e16; border-color: #22c55e; }
+    .option.correct label { color: #86efac; }
+    .option.incorrect { background: #2d0a0a; border-color: #ef4444; }
+    .option.incorrect label { color: #fca5a5; }
+    .correction-zone {
+      display: none; background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: 1rem 1.2rem;
+      margin-top: .5rem; font-size: .88rem; line-height: 1.7;
+    }
+    .correction-zone.visible { display: block; }
+    .correction-zone .answer-label { font-weight: 700; color: #22c55e; margin-bottom: .4rem; }
+    .correction-zone .explication { color: #94a3b8; }
+    .correction-zone .wrong-note { color: #f87171; margin-top: .5rem; }
+    .btn-show { background: #334155; color: #94a3b8; border: none; border-radius: 6px; padding: .35rem .85rem; font-size: .8rem; cursor: pointer; transition: all .2s; }
+    .btn-show:hover { background: #475569; color: #e2e8f0; }
+    .score-zone { display: none; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; }
+    .score-zone .score-val { font-size: 2.5rem; font-weight: 800; color: #e879f9; }
+    .score-zone p { color: #94a3b8; margin-top: .4rem; }
+    code { background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: .1em .35em; font-family: 'Fira Code', monospace; font-size: .85em; color: #f0abfc; }
+    .tag-tf { display: inline-block; background: #3b0764; color: #d8b4fe; border-radius: 4px; padding: .05em .4em; font-size: .75em; font-weight: 700; margin-right: .2em; }
+    .tag-ans { display: inline-block; background: #052e16; color: #86efac; border-radius: 4px; padding: .05em .4em; font-size: .75em; font-weight: 700; margin-right: .2em; }
+    footer { text-align: center; color: #475569; font-size: .8rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #1e293b; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🔗 QCM — Terraform &amp; Ansible en tandem</h1>
+    <p class="subtitle">Utilisation conjointe des deux outils — Formation 3IAC1</p>
+    <div class="meta">
+      <span class="badge">📅 28 mai 2026</span>
+      <span class="badge">🎯 20 questions</span>
+      <span class="badge">⏱ ~30 min</span>
+      <span class="badge">📚 Niveau Bachelor 3</span>
+    </div>
+  </header>
+
+  <div class="chain-banner">
+    <span class="chain-pill pill-tf">🟣 Terraform</span>
+    <span class="pill-arrow">provisionne →</span>
+    <span class="chain-pill pill-tf">generated.ini</span>
+    <span class="pill-arrow">→</span>
+    <span class="chain-pill pill-ans">🟢 Ansible</span>
+    <span class="pill-arrow">→ configure</span>
+    <span class="chain-pill pill-ans">output/</span>
+  </div>
+
+  <div class="actions-top">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <div class="score-zone" id="scoreZone">
+    <div class="score-val" id="scoreVal"></div>
+    <p id="scoreMsg"></p>
+  </div>
+
+  <!-- Q1 — correct : b -->
+  <div class="question-card" id="q1">
+    <div class="question-header">
+      <span class="q-num">Q1</span>
+      <div><div class="q-text">Quelle est la répartition des responsabilités entre Terraform et Ansible dans une chaîne IaC complète ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q1" id="q1a" value="a"><label for="q1a">a) Terraform installe les logiciels, Ansible crée les serveurs</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1b" value="b"><label for="q1b">b) <span class="tag-tf">TF</span> provisionne l'infrastructure (créer les ressources), <span class="tag-ans">ANS</span> gère la configuration logicielle (installer, déployer, configurer)</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1c" value="c"><label for="q1c">c) Les deux outils font exactement la même chose ; on choisit selon sa préférence</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1d" value="d"><label for="q1d">d) Terraform gère le jour-0 et le jour-1, Ansible est réservé aux corrections d'urgence</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr1')">Voir la correction</button>
+    <div class="correction-zone" id="corr1">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">La complémentarité est fondamentale : <strong>Terraform</strong> déclare et crée l'infrastructure (VMs, réseaux, stockage…) via des providers ; <strong>Ansible</strong> prend la main ensuite pour configurer ce qui vient d'être provisionné (paquets, fichiers de config, services…). Dans le projet : Terraform crée des fichiers locaux simulant des serveurs, Ansible les configure via des templates Jinja2.</div>
+      <div class="wrong-note">Ce ne sont pas des outils interchangeables (c) : Terraform est déclaratif avec gestion d'état, Ansible est procédural/agentless. Chacun excelle dans son domaine.</div>
+    </div>
+  </div>
+
+  <!-- Q2 — correct : d -->
+  <div class="question-card" id="q2">
+    <div class="question-header">
+      <span class="q-num">Q2</span>
+      <div><div class="q-text">Dans le projet, quel est l'ordre correct des étapes pour déployer l'environnement complet ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q2" id="q2a" value="a"><label for="q2a">a) <code>ansible-playbook deploy.yml</code> → <code>terraform init</code> → <code>terraform apply</code></label></div>
+      <div class="option"><input type="radio" name="q2" id="q2b" value="b"><label for="q2b">b) <code>terraform apply</code> → <code>terraform init</code> → <code>ansible-playbook deploy.yml</code></label></div>
+      <div class="option"><input type="radio" name="q2" id="q2c" value="c"><label for="q2c">c) <code>terraform plan</code> → <code>ansible-playbook deploy.yml</code> → <code>terraform apply</code></label></div>
+      <div class="option"><input type="radio" name="q2" id="q2d" value="d"><label for="q2d">d) <code>terraform init</code> → <code>terraform apply</code> → <code>ansible-playbook -i inventories/generated.ini playbooks/deploy.yml</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr2')">Voir la correction</button>
+    <div class="correction-zone" id="corr2">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">L'ordre est impératif : <strong>1)</strong> <code>terraform init</code> télécharge les providers ; <strong>2)</strong> <code>terraform apply</code> crée les ressources <em>et</em> génère <code>ansible/inventories/generated.ini</code> ; <strong>3)</strong> seulement alors, Ansible peut utiliser cet inventaire pour configurer les hôtes. Lancer Ansible avant Terraform (a) ferait échouer le playbook car l'inventaire n'existe pas encore.</div>
+    </div>
+  </div>
+
+  <!-- Q3 — correct : a -->
+  <div class="question-card" id="q3">
+    <div class="question-header">
+      <span class="q-num">Q3</span>
+      <div><div class="q-text">Dans <code>terraform/tp-final/main.tf</code>, pourquoi la ressource <code>local_file.ansible_inventory</code> déclare-t-elle <code>depends_on = [local_file.server_info]</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q3" id="q3a" value="a"><label for="q3a">a) Pour garantir que les fichiers serveur sont créés avant que l'inventaire Ansible soit généré, même sans lien de données direct entre eux</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3b" value="b"><label for="q3b">b) Pour que Terraform crée les deux ressources en parallèle et accélère l'exécution</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3c" value="c"><label for="q3c">c) Pour empêcher que l'inventaire soit modifié si les fichiers serveur changent</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3d" value="d"><label for="q3d">d) Pour injecter le contenu des fichiers serveur dans l'inventaire Ansible</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr3')">Voir la correction</button>
+    <div class="correction-zone" id="corr3">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>depends_on</code> force une dépendance d'ordre explicite. Ici, Terraform n'utilise pas les valeurs de <code>server_info</code> dans l'inventaire (pas de référence directe), donc il ne saurait pas seul dans quel ordre créer les deux ressources. <code>depends_on</code> garantit la cohérence fonctionnelle : les "serveurs" doivent exister avant que leur inventaire soit généré.</div>
+      <div class="wrong-note">b) est faux : <code>depends_on</code> impose un ordre séquentiel, donc c'est l'opposé du parallélisme.</div>
+    </div>
+  </div>
+
+  <!-- Q4 — correct : c -->
+  <div class="question-card" id="q4">
+    <div class="question-header">
+      <span class="q-num">Q4</span>
+      <div><div class="q-text">Dans <code>terraform/tp-final/templates/inventory.tpl</code>, Terraform génère le fichier <code>generated.ini</code>. Quel mécanisme Terraform est utilisé pour écrire le contenu de ce fichier ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q4" id="q4a" value="a"><label for="q4a">a) Un bloc <code>output</code> avec la directive <code>file_output</code></label></div>
+      <div class="option"><input type="radio" name="q4" id="q4b" value="b"><label for="q4b">b) Un provisioner <code>local-exec</code> qui exécute un script shell</label></div>
+      <div class="option"><input type="radio" name="q4" id="q4c" value="c"><label for="q4c">c) La fonction <code>templatefile()</code> combinée à une ressource <code>local_file</code></label></div>
+      <div class="option"><input type="radio" name="q4" id="q4d" value="d"><label for="q4d">d) Un module externe du registry Terraform dédié à la génération d'inventaires</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr4')">Voir la correction</button>
+    <div class="correction-zone" id="corr4">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">Dans <code>tp-final/main.tf</code> : <code>resource "local_file" "ansible_inventory" { content = templatefile("${path.module}/templates/inventory.tpl", { servers = [...], environment = var.environment }) }</code>. La fonction <code>templatefile()</code> rend le template <code>inventory.tpl</code> avec les variables Terraform (liste de serveurs, environnement), et la ressource <code>local_file</code> écrit le résultat sur le disque à l'emplacement attendu par Ansible.</div>
+    </div>
+  </div>
+
+  <!-- Q5 — correct : b -->
+  <div class="question-card" id="q5">
+    <div class="question-header">
+      <span class="q-num">Q5</span>
+      <div><div class="q-text">La variable <code>deploy_environment</code> apparaît dans l'inventaire généré (<code>generated.ini</code>). D'où vient-elle et comment est-elle transmise à Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q5" id="q5a" value="a"><label for="q5a">a) Elle est définie manuellement dans <code>ansible.cfg</code> après l'exécution de Terraform</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5b" value="b"><label for="q5b">b) Elle est définie comme variable Terraform (<code>var.environment</code>) et inscrite dans l'inventaire via le template <code>inventory.tpl</code> ; Ansible la lit comme variable d'hôte</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5c" value="c"><label for="q5c">c) Elle est exportée par Terraform comme variable d'environnement shell, lue automatiquement par Ansible</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5d" value="d"><label for="q5d">d) Elle est définie dans <code>defaults/main.yml</code> du rôle Ansible et n'a aucun lien avec Terraform</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr5')">Voir la correction</button>
+    <div class="correction-zone" id="corr5">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">C'est le cœur du passage de contexte entre les deux outils. Terraform possède <code>var.environment = "development"</code>. Le template <code>inventory.tpl</code> inscrit <code>deploy_environment=development</code> sur chaque ligne d'hôte. Résultat dans <code>generated.ini</code> : <code>192.168.1.10 ansible_connection=local deploy_environment=development</code>. Ansible lit cette valeur comme variable d'hôte, accessible dans les playbooks et templates via <code>{{ deploy_environment }}</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q6 — correct : d -->
+  <div class="question-card" id="q6">
+    <div class="question-header">
+      <span class="q-num">Q6</span>
+      <div><div class="q-text">Que se passe-t-il concrètement si on augmente <code>var.instance_count</code> de 2 à 4 dans Terraform et qu'on relance <code>terraform apply</code>, puis <code>ansible-playbook</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q6" id="q6a" value="a"><label for="q6a">a) Terraform détruit tout et recrée 4 ressources depuis zéro ; Ansible doit être relancé manuellement sur chaque nouvel hôte</label></div>
+      <div class="option"><input type="radio" name="q6" id="q6b" value="b"><label for="q6b">b) Terraform refuse d'appliquer le changement sans confirmation explicite via un fichier de lock</label></div>
+      <div class="option"><input type="radio" name="q6" id="q6c" value="c"><label for="q6c">c) Rien ne change tant que le <code>tfstate</code> n'est pas supprimé manuellement</label></div>
+      <div class="option"><input type="radio" name="q6" id="q6d" value="d"><label for="q6d">d) Terraform crée 2 nouvelles ressources serveur, régénère <code>generated.ini</code> avec 4 entrées ; Ansible configure alors automatiquement les 4 hôtes</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr6')">Voir la correction</button>
+    <div class="correction-zone" id="corr6">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">Grâce au méta-argument <code>count</code> et au state file, Terraform calcule le diff : 2 instances existent déjà (pas touchées), 2 nouvelles sont à créer. L'inventaire Ansible est régénéré avec 4 lignes. À la prochaine exécution d'Ansible, les 4 hôtes sont ciblés — les 2 anciens reçoivent un <code>ok</code> (idempotence), les 2 nouveaux reçoivent un <code>changed</code>. C'est la force de la chaîne automatisée.</div>
+    </div>
+  </div>
+
+  <!-- Q7 — correct : c -->
+  <div class="question-card" id="q7">
+    <div class="question-header">
+      <span class="q-num">Q7</span>
+      <div><div class="q-text">Dans la chaîne du projet, quel est l'unique fichier produit par Terraform qui sert de "pont" vers Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q7" id="q7a" value="a"><label for="q7a">a) <code>terraform.tfstate</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7b" value="b"><label for="q7b">b) <code>output/dev/config.json</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7c" value="c"><label for="q7c">c) <code>ansible/inventories/generated.ini</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7d" value="d"><label for="q7d">d) <code>ansible/ansible.cfg</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr7')">Voir la correction</button>
+    <div class="correction-zone" id="corr7">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication"><code>generated.ini</code> est l'artefact clé du passage de relais. Terraform le génère via <code>templatefile("inventory.tpl", ...)</code> et le dépose exactement là où Ansible l'attend. Il contient les IPs, la connexion (<code>ansible_connection=local</code>) et les variables d'environnement. Sans ce fichier, Ansible n'a pas de cible : la commande <code>ansible-playbook -i inventories/generated.ini</code> échouerait.</div>
+      <div class="wrong-note"><code>terraform.tfstate</code> (a) est interne à Terraform et ne doit jamais être lu directement par Ansible.</div>
+    </div>
+  </div>
+
+  <!-- Q8 — correct : a -->
+  <div class="question-card" id="q8">
+    <div class="question-header">
+      <span class="q-num">Q8</span>
+      <div><div class="q-text">Pourquoi le fichier <code>terraform.tfstate</code> ne doit-il <strong>pas</strong> être commité dans Git, alors que <code>.terraform.lock.hcl</code> doit l'être ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q8" id="q8a" value="a"><label for="q8a">a) <code>tfstate</code> contient des données sensibles (mots de passe, clés) en clair ; <code>lock.hcl</code> ne contient que des versions et hashes de providers — sans secret</label></div>
+      <div class="option"><input type="radio" name="q8" id="q8b" value="b"><label for="q8b">b) <code>tfstate</code> est trop volumineux pour Git ; <code>lock.hcl</code> est petit</label></div>
+      <div class="option"><input type="radio" name="q8" id="q8c" value="c"><label for="q8c">c) <code>tfstate</code> est inutile pour les autres membres de l'équipe ; <code>lock.hcl</code> est nécessaire pour exécuter les playbooks Ansible</label></div>
+      <div class="option"><input type="radio" name="q8" id="q8d" value="d"><label for="q8d">d) Les deux doivent être commités ; c'est uniquement <code>generated.ini</code> qui ne doit pas l'être</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr8')">Voir la correction</button>
+    <div class="correction-zone" id="corr8">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">Le <code>tfstate</code> peut contenir des valeurs sensibles en clair (mots de passe de BDD, clés API…) même si elles sont déclarées <code>sensitive = true</code> dans les variables. Le commiter dans Git les exposerait dans l'historique. En équipe, le state est géré via un backend distant sécurisé (S3 + chiffrement, Terraform Cloud…). À l'inverse, <code>.terraform.lock.hcl</code> ne contient que des versions et hashes cryptographiques de providers : sans risque de sécurité, et utile pour garantir la reproductibilité des builds.</div>
+    </div>
+  </div>
+
+  <!-- Q9 — correct : a + c (multi) -->
+  <div class="question-card" id="q9">
+    <div class="question-header">
+      <span class="q-num">Q9</span>
+      <div>
+        <div class="q-text">Quels sont les avantages de l'approche "inventaire dynamique généré par Terraform" par rapport à un inventaire Ansible statique écrit à la main ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q9" id="q9a" value="a"><label for="q9a">a) Zéro risque d'erreur humaine sur les IPs : Terraform écrit ce qu'il a réellement créé</label></div>
+      <div class="option"><input type="checkbox" name="q9" id="q9b" value="b"><label for="q9b">b) L'inventaire dynamique permet à Ansible de modifier l'infrastructure (ajouter des VMs) sans relancer Terraform</label></div>
+      <div class="option"><input type="checkbox" name="q9" id="q9c" value="c"><label for="q9c">c) L'inventaire est automatiquement à jour quand <code>instance_count</code> change et que <code>terraform apply</code> est relancé</label></div>
+      <div class="option"><input type="checkbox" name="q9" id="q9d" value="d"><label for="q9d">d) Ansible n'a plus besoin du fichier <code>ansible.cfg</code> si l'inventaire est généré par Terraform</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr9')">Voir la correction</button>
+    <div class="correction-zone" id="corr9">
+      <div class="answer-label">✅ Bonnes réponses : a) et c)</div>
+      <div class="explication">
+        <strong>a) Vrai</strong> — Terraform connaît exactement les ressources qu'il a créées et leur IP réelle. Plus de risque de copier-coller une mauvaise IP dans un fichier INI.<br>
+        <strong>c) Vrai</strong> — C'est la principale force de la chaîne : scalabilité automatique. Modifier <code>instance_count</code> et relancer suffit.<br>
+        <strong>b) Faux</strong> — Ansible ne peut pas créer d'infrastructure. C'est le rôle exclusif de Terraform. Ansible configure ce qui existe.<br>
+        <strong>d) Faux</strong> — <code>ansible.cfg</code> reste nécessaire pour configurer le comportement d'Ansible (chemin des rôles, <code>host_key_checking</code>…).
+      </div>
+    </div>
+  </div>
+
+  <!-- Q10 — correct : d -->
+  <div class="question-card" id="q10">
+    <div class="question-header">
+      <span class="q-num">Q10</span>
+      <div><div class="q-text">Dans le template <code>inventory.tpl</code>, les variables comme <code>${servers}</code> utilisent la syntaxe HCL de Terraform, non la syntaxe Jinja2. Pourquoi est-ce important de ne pas les confondre ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q10" id="q10a" value="a"><label for="q10a">a) Parce que Jinja2 est plus lent à rendre que HCL et impacterait les performances</label></div>
+      <div class="option"><input type="radio" name="q10" id="q10b" value="b"><label for="q10b">b) Parce qu'Ansible pourrait modifier les templates Terraform si les syntaxes étaient identiques</label></div>
+      <div class="option"><input type="radio" name="q10" id="q10c" value="c"><label for="q10c">c) Parce que les fichiers <code>.tpl</code> sont lus par Ansible, qui doit reconnaître sa propre syntaxe</label></div>
+      <div class="option"><input type="radio" name="q10" id="q10d" value="d"><label for="q10d">d) Parce que <code>${var}</code> est rendu par Terraform lors du <code>apply</code>, tandis que <code>{{ var }}</code> est rendu par Ansible lors de l'exécution du playbook — utiliser la mauvaise syntaxe produirait un texte littéral non substitué</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr10')">Voir la correction</button>
+    <div class="correction-zone" id="corr10">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">C'est une erreur classique en formation ! Les templates <code>.tpl</code> de Terraform utilisent <code>${variable}</code> (HCL), rendus lors de <code>terraform apply</code>. Les templates <code>.j2</code> d'Ansible utilisent <code>{{ variable }}</code> (Jinja2), rendus lors de l'exécution du playbook. Si on écrit <code>{{ servers }}</code> dans un template Terraform, la valeur ne sera jamais substituée par Terraform — le fichier généré contiendra le texte littéral <code>{{ servers }}</code>. Cette confusion est citée dans le fichier <code>.ia/contexte-projet.md</code> comme erreur fréquente à anticiper.</div>
+    </div>
+  </div>
+
+  <!-- Q11 — correct : b -->
+  <div class="question-card" id="q11">
+    <div class="question-header">
+      <span class="q-num">Q11</span>
+      <div><div class="q-text">Dans <code>deploy.yml</code>, la tâche "Générer la configuration nginx" utilise le module <code>template</code> avec <code>src: nginx.conf.j2</code>. D'où vient la variable <code>{{ deploy_environment }}</code> utilisée dans ce template ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q11" id="q11a" value="a"><label for="q11a">a) Elle est définie en dur dans le fichier <code>nginx.conf.j2</code> lui-même</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11b" value="b"><label for="q11b">b) Elle provient de l'inventaire <code>generated.ini</code>, où Terraform l'a écrite comme variable d'hôte</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11c" value="c"><label for="q11c">c) Elle est générée automatiquement par Ansible à partir du nom du groupe d'hôtes</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11d" value="d"><label for="q11d">d) Elle est exportée comme variable d'environnement shell avant de lancer le playbook</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr11')">Voir la correction</button>
+    <div class="correction-zone" id="corr11">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">C'est le passage de relais concret entre les deux outils. Dans <code>generated.ini</code> : <code>192.168.1.10 ansible_connection=local deploy_environment=development</code>. Ansible lit cette variable d'hôte et la rend disponible dans tous les templates et tâches du playbook. Le filtre <code>| default('development')</code> dans <code>nginx.conf.j2</code> sert de garde-fou si la variable était absente.</div>
+    </div>
+  </div>
+
+  <!-- Q12 — correct : c -->
+  <div class="question-card" id="q12">
+    <div class="question-header">
+      <span class="q-num">Q12</span>
+      <div><div class="q-text">Pourquoi dit-on que Terraform est <strong>déclaratif</strong> et Ansible <strong>procédural</strong> ? Quelle conséquence pratique cela a-t-il ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q12" id="q12a" value="a"><label for="q12a">a) Terraform s'exécute dans un terminal, Ansible dans un navigateur web</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12b" value="b"><label for="q12b">b) Terraform utilise Python, Ansible utilise Go — c'est une différence de langage uniquement</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12c" value="c"><label for="q12c">c) Avec Terraform, on décrit l'état final désiré et il calcule les actions nécessaires ; avec Ansible, on décrit les étapes à exécuter dans l'ordre</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12d" value="d"><label for="q12d">d) Terraform peut uniquement créer des ressources, jamais les modifier ni les supprimer</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr12')">Voir la correction</button>
+    <div class="correction-zone" id="corr12">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">Terraform est <strong>déclaratif</strong> : on décrit "je veux 3 serveurs en production" et Terraform calcule lui-même quoi créer/modifier/détruire pour atteindre cet état (via le diff state). Ansible est plus <strong>procédural</strong> : on liste les tâches dans l'ordre — "crée ce dossier, puis copie ce fichier, puis lance ce service". L'idempotence d'Ansible compense partiellement cela, mais l'ordre des tâches reste important.</div>
+    </div>
+  </div>
+
+  <!-- Q13 — correct : a -->
+  <div class="question-card" id="q13">
+    <div class="question-header">
+      <span class="q-num">Q13</span>
+      <div><div class="q-text">Dans le TP final, pourquoi crée-t-on d'abord les fichiers <code>server-0.json</code>, <code>server-1.json</code> via Terraform <em>avant</em> de lancer Ansible, plutôt que de laisser Ansible créer ces fichiers directement ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q13" id="q13a" value="a"><label for="q13a">a) Ces fichiers simulent des métadonnées d'infrastructure (IP, rôle, environnement) que Terraform est responsable de créer ; Ansible n'a pas vocation à créer l'infrastructure</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13b" value="b"><label for="q13b">b) Ansible ne peut pas créer des fichiers JSON, uniquement des fichiers de configuration texte</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13c" value="c"><label for="q13c">c) Les fichiers JSON sont nécessaires pour que Terraform puisse lire son propre state</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13d" value="d"><label for="q13d">d) C'est une contrainte technique du provider <code>hashicorp/local</code> qui impose cet ordre</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr13')">Voir la correction</button>
+    <div class="correction-zone" id="corr13">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">La séparation des responsabilités est conceptuelle, pas seulement technique. Ces fichiers JSON représentent des métadonnées d'infrastructure (ce que serait une VM dans un vrai cloud). Terraform, outil de provisionning, est responsable de les créer. Ansible, outil de configuration, prend ensuite la main pour déployer l'application sur ces "serveurs". Respecter cette frontière rend la chaîne claire, maintenable et évolutive.</div>
+    </div>
+  </div>
+
+  <!-- Q14 — correct : d -->
+  <div class="question-card" id="q14">
+    <div class="question-header">
+      <span class="q-num">Q14</span>
+      <div><div class="q-text">Que produit l'output Terraform <code>server_ips</code> dans <code>tp-final/main.tf</code> ? À quoi peut-il servir dans une vraie chaîne IaC ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q14" id="q14a" value="a"><label for="q14a">a) Il modifie directement le fichier <code>generated.ini</code> avec les IPs calculées</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14b" value="b"><label for="q14b">b) Il exporte les IPs comme variables d'environnement pour les scripts shell suivants, mais Ansible ne peut pas les lire</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14c" value="c"><label for="q14c">c) Il ne sert qu'à l'affichage console et n'a aucune utilité dans une pipeline CI/CD</label></div>
+      <div class="option"><input type="radio" name="q14" id="q14d" value="d"><label for="q14d">d) Il affiche la liste des IPs en fin de <code>apply</code>, et dans une vraie pipeline, <code>terraform output -json</code> permet à un script d'automatiser la suite (passer les IPs à Ansible, à une notification, etc.)</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr14')">Voir la correction</button>
+    <div class="correction-zone" id="corr14">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">Les blocs <code>output</code> servent à deux choses : l'affichage lisible en fin de <code>terraform apply</code>, et la récupération programmatique via <code>terraform output -json server_ips</code> dans un script CI/CD. Dans une vraie pipeline (GitHub Actions, GitLab CI…), on pourrait récupérer les IPs avec cette commande et les passer dynamiquement à Ansible, évitant même l'étape de génération d'inventaire fichier.</div>
+    </div>
+  </div>
+
+  <!-- Q15 — correct : b + d (multi) -->
+  <div class="question-card" id="q15">
+    <div class="question-header">
+      <span class="q-num">Q15</span>
+      <div>
+        <div class="q-text">Quels fichiers du projet doivent être ajoutés au <code>.gitignore</code> ? Lesquels doivent être commités ?</div>
+        <div class="q-note">⚠️ Sélectionnez les fichiers qui doivent être <strong>commités dans Git</strong></div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q15" id="q15a" value="a"><label for="q15a">a) <code>terraform.tfstate</code> — commiter pour partager l'état en équipe</label></div>
+      <div class="option"><input type="checkbox" name="q15" id="q15b" value="b"><label for="q15b">b) <code>.terraform.lock.hcl</code> — commiter pour garantir des builds reproductibles</label></div>
+      <div class="option"><input type="checkbox" name="q15" id="q15c" value="c"><label for="q15c">c) <code>ansible/inventories/generated.ini</code> — commiter car il est généré automatiquement</label></div>
+      <div class="option"><input type="checkbox" name="q15" id="q15d" value="d"><label for="q15d">d) <code>ansible/playbooks/deploy.yml</code> — commiter car c'est du code source</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr15')">Voir la correction</button>
+    <div class="correction-zone" id="corr15">
+      <div class="answer-label">✅ Bonnes réponses : b) et d)</div>
+      <div class="explication">
+        <strong>b) Commiter ✅</strong> — <code>.terraform.lock.hcl</code> : versionnage des providers, sans donnée sensible.<br>
+        <strong>d) Commiter ✅</strong> — Les playbooks, templates, variables et rôles sont du code source IaC — ils doivent être versionnés.<br>
+        <strong>a) Ne pas commiter ❌</strong> — <code>tfstate</code> contient potentiellement des secrets en clair. À gérer via un backend distant.<br>
+        <strong>c) Ne pas commiter ❌</strong> — <code>generated.ini</code> est un artefact généré (comme un binaire compilé). Le commiter créerait des conflits en équipe et exposerait les IPs dans l'historique Git. Il est dans le <code>.gitignore</code> du projet avec <code>output/</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q16 — correct : c -->
+  <div class="question-card" id="q16">
+    <div class="question-header">
+      <span class="q-num">Q16</span>
+      <div><div class="q-text">Dans une pipeline CI/CD (ex. GitHub Actions), dans quel ordre typique enchaîne-t-on les étapes Terraform et Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q16" id="q16a" value="a"><label for="q16a">a) Ansible lint → Ansible playbook → Terraform plan → Terraform apply</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16b" value="b"><label for="q16b">b) Terraform apply → Terraform destroy → Ansible playbook → Ansible lint</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16c" value="c"><label for="q16c">c) Terraform init → Terraform plan → Terraform apply → Ansible playbook (avec l'inventaire généré)</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16d" value="d"><label for="q16d">d) Ansible playbook → Terraform init → Terraform plan → Terraform apply</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr16')">Voir la correction</button>
+    <div class="correction-zone" id="corr16">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">L'ordre est logique et impératif : on ne peut pas configurer une infrastructure qui n'existe pas encore. En CI/CD : <strong>1)</strong> <code>terraform init</code> (télécharge les providers) ; <strong>2)</strong> <code>terraform plan</code> (revue humaine ou automatique) ; <strong>3)</strong> <code>terraform apply -auto-approve</code> (provisionne et génère l'inventaire) ; <strong>4)</strong> <code>ansible-playbook -i generated.ini deploy.yml</code> (configure). On peut aussi ajouter des étapes de lint (<code>terraform validate</code>, <code>ansible-lint</code>) avant les apply.</div>
+    </div>
+  </div>
+
+  <!-- Q17 — correct : a -->
+  <div class="question-card" id="q17">
+    <div class="question-header">
+      <span class="q-num">Q17</span>
+      <div><div class="q-text">L'IaC (Infrastructure as Code) implique que toute la configuration est décrite dans des fichiers versionnés. Quels bénéfices concrets cela apporte-t-il par rapport à une configuration manuelle via une interface graphique (ClickOps) ? <span class="q-note">(plusieurs réponses possibles)</span></div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q17" id="q17a" value="a"><label for="q17a">a) Reproductibilité : recréer exactement le même environnement (dev, staging, prod) depuis les mêmes fichiers</label></div>
+      <div class="option"><input type="checkbox" name="q17" id="q17b" value="b"><label for="q17b">b) L'IaC élimine tout risque de panne car les fichiers sont statiques</label></div>
+      <div class="option"><input type="checkbox" name="q17" id="q17c" value="c"><label for="q17c">c) Traçabilité : l'historique Git montre qui a changé quoi et quand sur l'infrastructure</label></div>
+      <div class="option"><input type="checkbox" name="q17" id="q17d" value="d"><label for="q17d">d) Automatisation : intégration dans des pipelines CI/CD sans intervention humaine</label></div>
+    </div>
+    <div class="q-note" style="margin-top:.3rem">⚠️ Plusieurs réponses attendues</div>
+    <button class="btn-show" onclick="toggleCorrection('corr17')">Voir la correction</button>
+    <div class="correction-zone" id="corr17">
+      <div class="answer-label">✅ Bonnes réponses : a), c) et d)</div>
+      <div class="explication">
+        <strong>a) Vrai</strong> — C'est l'avantage fondamental : mêmes fichiers → même infra, partout. Fini le "ça marche chez moi".<br>
+        <strong>c) Vrai</strong> — Chaque <code>git commit</code> est une trace auditée : qui a augmenté <code>instance_count</code>, quand, avec quel message.<br>
+        <strong>d) Vrai</strong> — Les fichiers peuvent être exécutés automatiquement dans une pipeline sans cliquer dans une console cloud.<br>
+        <strong>b) Faux</strong> — L'IaC ne garantit pas l'absence de panne. Elle facilite la récupération (on peut relancer depuis les fichiers), mais des bugs peuvent exister dans le code lui-même.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q18 — correct : d -->
+  <div class="question-card" id="q18">
+    <div class="question-header">
+      <span class="q-num">Q18</span>
+      <div><div class="q-text">Dans le projet, la variable <code>var.environment</code> de Terraform et la variable <code>app_environment</code> du rôle Ansible ont des noms différents. Comment s'assure-t-on qu'elles désignent bien le même environnement de déploiement ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q18" id="q18a" value="a"><label for="q18a">a) Elles sont automatiquement synchronisées par Terraform lors du <code>apply</code></label></div>
+      <div class="option"><input type="radio" name="q18" id="q18b" value="b"><label for="q18b">b) On doit définir une variable d'environnement shell <code>ENV</code> lue par les deux outils</label></div>
+      <div class="option"><input type="radio" name="q18" id="q18c" value="c"><label for="q18c">c) Les deux outils lisent le même fichier <code>terraform.tfvars</code> comme source commune</label></div>
+      <div class="option"><input type="radio" name="q18" id="q18d" value="d"><label for="q18d">d) Terraform écrit la valeur dans <code>generated.ini</code> (sous le nom <code>deploy_environment</code>), et le playbook Ansible passe cette valeur au rôle via ses variables</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr18')">Voir la correction</button>
+    <div class="correction-zone" id="corr18">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">La chaîne de transmission est : <code>var.environment</code> (Terraform) → template <code>inventory.tpl</code> → <code>deploy_environment=development</code> dans <code>generated.ini</code> → variable d'hôte Ansible → <code>{{ deploy_environment }}</code> dans <code>deploy.yml</code> → peut être passée au rôle via ses variables. Il faut donc être vigilant sur cette chaîne de nommage lors du développement.</div>
+    </div>
+  </div>
+
+  <!-- Q19 — correct : b -->
+  <div class="question-card" id="q19">
+    <div class="question-header">
+      <span class="q-num">Q19</span>
+      <div><div class="q-text">Si on veut tester uniquement la partie Ansible (sans relancer Terraform), quelle condition préalable est nécessaire ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q19" id="q19a" value="a"><label for="q19a">a) Supprimer le <code>tfstate</code> pour forcer Terraform à régénérer l'inventaire au prochain <code>apply</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19b" value="b"><label for="q19b">b) Que <code>generated.ini</code> existe déjà sur le disque (issu d'un précédent <code>terraform apply</code>) ou qu'on utilise l'inventaire statique <code>hosts.ini</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19c" value="c"><label for="q19c">c) Lancer <code>terraform plan</code> (sans apply) pour régénérer l'inventaire en mode dry-run</label></div>
+      <div class="option"><input type="radio" name="q19" id="q19d" value="d"><label for="q19d">d) Exporter manuellement les outputs Terraform en variables d'environnement avant de lancer Ansible</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr19')">Voir la correction</button>
+    <div class="correction-zone" id="corr19">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">Ansible a besoin d'un inventaire pour fonctionner. Si <code>generated.ini</code> existe déjà (Terraform a déjà été appliqué), on peut relancer Ansible directement avec <code>-i inventories/generated.ini</code>. Alternativement, le projet fournit <code>hosts.ini</code> (inventaire statique avec <code>localhost</code>) pour les TP indépendants de Terraform. <code>terraform plan</code> (c) ne génère aucun fichier : il affiche seulement ce qui serait fait.</div>
+    </div>
+  </div>
+
+  <!-- Q20 — correct : a + c + d (multi) -->
+  <div class="question-card" id="q20">
+    <div class="question-header">
+      <span class="q-num">Q20</span>
+      <div>
+        <div class="q-text">En conditions réelles (cloud AWS, Azure…), quelles affirmations sur la chaîne Terraform + Ansible sont vraies ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q20" id="q20a" value="a"><label for="q20a">a) Terraform crée les VMs avec leurs vraies IPs publiques/privées ; l'inventaire Ansible est généré avec ces IPs réelles</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20b" value="b"><label for="q20b">b) Ansible remplace Terraform pour créer les VMs cloud via ses modules <code>ec2_instance</code> ou <code>azure_rm_virtualmachine</code></label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20c" value="c"><label for="q20c">c) Ansible se connecte aux VMs via SSH (pas <code>ansible_connection=local</code>) avec les clés générées ou gérées par Terraform</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20d" value="d"><label for="q20d">d) Le state Terraform est stocké dans un backend distant (S3, Azure Blob…) pour que toute l'équipe partage le même état d'infrastructure</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr20')">Voir la correction</button>
+    <div class="correction-zone" id="corr20">
+      <div class="answer-label">✅ Bonnes réponses : a), c) et d)</div>
+      <div class="explication">
+        <strong>a) Vrai</strong> — En cloud réel, Terraform crée des <code>aws_instance</code> avec de vraies IPs, et les écrit dans l'inventaire via un template similaire à celui du TP final.<br>
+        <strong>c) Vrai</strong> — En production, Ansible se connecte en SSH aux VMs distantes. <code>ansible_connection=local</code> est spécifique aux TP sans accès cloud de ce projet.<br>
+        <strong>d) Vrai</strong> — Indispensable en équipe : backend S3 + DynamoDB pour le lock (AWS), Azure Blob + table de lock, ou Terraform Cloud.<br>
+        <strong>b) Faux</strong> — Bien qu'Ansible ait des modules cloud, c'est une mauvaise pratique : Terraform est bien supérieur pour gérer le cycle de vie des ressources cloud (state, diff, destroy). La séparation des rôles reste la meilleure approche.
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-top" style="margin-top:2rem">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <footer>
+    QCM généré le 28 mai 2026 — Formation 3IAC1 — Utilisation conjointe Terraform &amp; Ansible<br>
+    Sources : tp-final/main.tf, inventory.tpl, deploy.yml, generated.ini.example, contexte-projet.md, rôle app-config
+  </footer>
+</div>
+
+<script>
+  const answers = {
+    q1:  ['b'],
+    q2:  ['d'],
+    q3:  ['a'],
+    q4:  ['c'],
+    q5:  ['b'],
+    q6:  ['d'],
+    q7:  ['c'],
+    q8:  ['a'],
+    q9:  ['a','c'],
+    q10: ['d'],
+    q11: ['b'],
+    q12: ['c'],
+    q13: ['a'],
+    q14: ['d'],
+    q15: ['b','d'],
+    q16: ['c'],
+    q17: ['a','c','d'],
+    q18: ['d'],
+    q19: ['b'],
+    q20: ['a','c','d']
+  };
+
+  function toggleCorrection(id) {
+    document.getElementById(id).classList.toggle('visible');
+  }
+  function showAll() {
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.add('visible'));
+  }
+  function calcScore() {
+    let score = 0;
+    for (let [q, correct] of Object.entries(answers)) {
+      const card = document.getElementById(q);
+      const isMulti = correct.length > 1;
+      let selected;
+      if (isMulti) {
+        selected = [...card.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+      } else {
+        const radio = card.querySelector('input[type=radio]:checked');
+        selected = radio ? [radio.value] : [];
+      }
+      const isCorrect = correct.length === selected.length && correct.every(v => selected.includes(v));
+      card.querySelectorAll('.option').forEach(opt => {
+        const inp = opt.querySelector('input');
+        opt.classList.remove('correct', 'incorrect');
+        if (correct.includes(inp.value)) opt.classList.add('correct');
+        else if (selected.includes(inp.value)) opt.classList.add('incorrect');
+      });
+      if (isCorrect) score++;
+    }
+    const pct = Math.round(score / 20 * 100);
+    document.getElementById('scoreVal').textContent = `${score} / 20 (${pct}%)`;
+    let msg = pct >= 80 ? '🎉 Excellent ! Vous maîtrisez la chaîne Terraform + Ansible.'
+            : pct >= 60 ? '👍 Bon niveau ! Quelques points d\'intégration à revoir.'
+            : '📖 Revoyez le fil rouge pédagogique du TP final — c\'est là que tout s\'assemble.';
+    document.getElementById('scoreMsg').textContent = msg;
+    const zone = document.getElementById('scoreZone');
+    zone.style.display = 'block';
+    zone.scrollIntoView({ behavior: 'smooth' });
+    showAll();
+  }
+  function resetAll() {
+    document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(i => i.checked = false);
+    document.querySelectorAll('.option').forEach(o => o.classList.remove('correct','incorrect'));
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.remove('visible'));
+    document.getElementById('scoreZone').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

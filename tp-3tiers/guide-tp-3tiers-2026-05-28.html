@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide TP — Infrastructure 3-tiers Docker | 3IAC1</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --card2: #16213e;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #3b82f6;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #2d2d4e;
+    --code-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a0533 0%, #0d1b4b 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+  }
+  header .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.4rem;
+  }
+  header p.subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  header .meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+  header .meta span {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  header .meta span strong { color: var(--text); }
+
+  /* ── Sommaire ── */
+  nav.sommaire {
+    background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  nav.sommaire a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  nav.sommaire a:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ── Layout ── */
+  main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── Sections ── */
+  section.step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(90deg, rgba(124,58,237,0.15) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .step-header:hover { background: linear-gradient(90deg, rgba(124,58,237,0.25) 0%, transparent 100%); }
+  .step-num {
+    min-width: 40px;
+    height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    color: white;
+  }
+  .step-header h2 {
+    flex: 1;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+  }
+  .step-header .duration {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: rgba(255,255,255,0.06);
+    padding: 0.2rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .step-header .chevron {
+    font-size: 1rem;
+    color: var(--muted);
+    transition: transform 0.25s;
+  }
+  .step-body { padding: 1.5rem; display: block; }
+  .step-body.collapsed { display: none; }
+
+  /* ── Objectif ── */
+  .objectif {
+    background: rgba(59,130,246,0.08);
+    border-left: 4px solid var(--info);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.9rem;
+    color: #93c5fd;
+  }
+  .objectif strong { color: var(--info); }
+
+  /* ── Prérequis ── */
+  .prereq {
+    background: rgba(245,158,11,0.08);
+    border-left: 4px solid var(--warning);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.87rem;
+    color: #fde68a;
+  }
+  .prereq strong { color: var(--warning); }
+
+  /* ── Bloc code ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #e6edf3;
+    position: relative;
+    margin: 0.8rem 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--muted);
+    padding: 0.2rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .code-block .copy-btn:hover { background: var(--accent); color: white; }
+  .code-label {
+    font-size: 0.73rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+    margin-top: 0.8rem;
+  }
+
+  /* ── Vérification ── */
+  .verif-section {
+    background: rgba(16,185,129,0.07);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-top: 1.2rem;
+  }
+  .verif-section h4 {
+    color: var(--success);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .verif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.87rem;
+  }
+  .verif-item .check-box {
+    min-width: 18px;
+    height: 18px;
+    border: 2px solid var(--success);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .verif-item .check-box.checked {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+    font-size: 12px;
+  }
+  .verif-item .check-label { line-height: 1.5; color: var(--text); }
+  .verif-item .check-label .cmd {
+    display: block;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #a5f3c4;
+    background: rgba(0,0,0,0.3);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.2rem;
+  }
+  .expected-output {
+    margin-top: 0.3rem;
+    padding: 0.5rem 0.8rem;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #6ee7b7;
+  }
+  .expected-output::before { content: "Résultat attendu : "; color: var(--muted); font-style: italic; }
+
+  /* ── Piège & conseil ── */
+  .tip {
+    background: rgba(168,85,247,0.08);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+    margin: 0.8rem 0;
+    font-size: 0.85rem;
+    color: #d8b4fe;
+  }
+  .tip strong { color: var(--accent2); }
+  .warning-box {
+    background: rgba(239,68,68,0.08);
+    border-left: 3px solid var(--danger);
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+    margin: 0.8rem 0;
+    font-size: 0.85rem;
+    color: #fca5a5;
+  }
+  .warning-box strong { color: var(--danger); }
+
+  /* ── Progress bar ── */
+  .progress-container {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+  }
+  .progress-top span { color: var(--muted); }
+  .progress-top strong { color: var(--accent2); }
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Architecture ── */
+  .archi-diagram {
+    background: var(--code-bg);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 1.2rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.9;
+    color: #e6edf3;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  .archi-diagram .net-dmz { color: #60a5fa; }
+  .archi-diagram .net-app { color: #a78bfa; }
+  .archi-diagram .net-db  { color: #f87171; }
+  .archi-diagram .container { color: #34d399; }
+
+  /* ── Intro card ── */
+  .intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .intro-card h2 { font-size: 1.05rem; color: var(--accent2); margin-bottom: 0.8rem; }
+  .intro-card p { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem; }
+
+  /* ── File tree ── */
+  .filetree {
+    background: var(--code-bg);
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: #e6edf3;
+    margin: 0.8rem 0;
+  }
+  .filetree .dir { color: #79c0ff; }
+  .filetree .file { color: #e6edf3; }
+  .filetree .comment { color: #8b949e; }
+  .filetree .todo { color: #f0883e; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    header h1 { font-size: 1.4rem; }
+    .step-header { flex-wrap: wrap; }
+    main { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">3IAC1 — Bachelor IaC</div>
+  <h1>TP — Infrastructure 3-tiers Docker</h1>
+  <p class="subtitle">Terraform · Ansible · Ansible Vault · Terratest</p>
+  <div class="meta">
+    <span>📅 <strong>28 mai 2026</strong></span>
+    <span>⏱ <strong>1h30 – 2h</strong></span>
+    <span>🖥 <strong>OVA Ubuntu 22.04</strong></span>
+    <span>🎯 <strong>Architecture production-ready</strong></span>
+  </div>
+</header>
+
+<nav class="sommaire">
+  <a href="#contexte">Contexte</a>
+  <a href="#etape0">0 · Prérequis</a>
+  <a href="#etape1">1 · Docker via Ansible</a>
+  <a href="#etape2">2 · Réseaux Terraform</a>
+  <a href="#etape3">3 · Conteneur PostgreSQL</a>
+  <a href="#etape4">4 · Nginx + Vault</a>
+  <a href="#etape5">5 · Terratest</a>
+  <a href="#recap">Récapitulatif</a>
+  <a href="#annexe-outils">Annexe · Vérification outils</a>
+  <a href="#annexe-hors-ova">Annexe · Hors OVA</a>
+</nav>
+
+<main>
+
+  <!-- Progress bar -->
+  <div class="progress-container">
+    <div class="progress-top">
+      <span>Progression des vérifications</span>
+      <strong id="progress-label">0 / 0</strong>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Contexte & architecture -->
+  <div class="intro-card" id="contexte">
+    <h2>🏗️ Architecture déployée</h2>
+    <p>Tu vas déployer une infrastructure 3-tiers containerisée, réaliste pour de la production. Chaque couche est isolée sur son propre réseau Docker.</p>
+
+    <div class="archi-diagram">
+<span class="net-dmz">┌─────────────────────────────────────────────┐
+│  dmz_net  (réseau d'entrée)                 │
+│                                             │
+│   🌐 Internet ──► <span class="container">[  Nginx :80  ]</span>          │
+└──────────────────────┬──────────────────────┘
+                       │
+<span class="net-app">┌──────────────────────▼──────────────────────┐
+│  app_net  (réseau applicatif)               │
+│                                             │
+│            <span class="container">[ Flask App :5000 ]</span>          │
+└──────────────────────┬──────────────────────┘
+                       │
+<span class="net-db">┌──────────────────────▼──────────────────────┐
+│  db_net  (réseau interne — PAS d'internet)  │
+│                                             │
+│   <span class="container">[ PostgreSQL ]</span>   <span class="container">[ Redis ]</span>             │
+└─────────────────────────────────────────────┘</span></span></span>
+    </div>
+
+    <p>Le TP est couplé à un QCM (<code>tp-qcm-iac-3tiers-2026-05-28.html</code>) : chaque étape correspond à une question où tu dois choisir le bon code parmi 4 options.</p>
+  </div>
+
+  <!-- Structure des fichiers -->
+  <div class="intro-card">
+    <h2>📁 Structure du projet</h2>
+    <pre class="filetree">
+<span class="dir">3iac1-lab-starter/</span>
+└── <span class="dir">tp-3tiers/</span>
+    ├── <span class="dir">terraform/</span>
+    │   ├── <span class="file">main.tf</span>                    <span class="comment"># Réseaux, conteneurs Docker</span>
+    │   ├── <span class="file">variables.tf</span>
+    │   ├── <span class="file">outputs.tf</span>
+    │   ├── <span class="file">terraform.tfvars.example</span>
+    │   └── <span class="dir">templates/</span>
+    │       └── <span class="file">inventory.tpl</span>          <span class="comment"># Template → inventaire Ansible</span>
+    │
+    ├── <span class="dir">ansible/</span>
+    │   ├── <span class="file">ansible.cfg</span>
+    │   ├── <span class="dir">group_vars/</span>
+    │   │   └── <span class="file">all.yml</span>                <span class="comment"># Variables + secrets Vault</span>
+    │   ├── <span class="dir">inventories/</span>
+    │   │   └── <span class="file todo">generated.ini</span>          <span class="comment"># Généré par Terraform (ne pas committer)</span>
+    │   ├── <span class="dir">playbooks/</span>
+    │   │   ├── <span class="file">01-install-docker.yml</span>
+    │   │   └── <span class="file">02-configure-nginx.yml</span>
+    │   └── <span class="dir">templates/</span>
+    │       └── <span class="file">nginx.conf.j2</span>
+    │
+    └── <span class="dir">test/</span>
+        ├── <span class="file">go.mod</span>
+        └── <span class="file">infrastructure_test.go</span>     <span class="comment"># Tests Terratest</span>
+    </pre>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 0 — Prérequis -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape0">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">0</div>
+      <h2>Prérequis — Vérifier l'environnement</h2>
+      <span class="duration">⏱ 5 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Vérifier que Terraform et Ansible sont disponibles sur l'OVA, puis préparer le projet. Docker et Go seront installés plus loin dans le TP.
+      </div>
+
+      <div class="prereq">
+        <strong>📋 Sur l'OVA :</strong> Terraform et Ansible sont pré-installés. Docker sera installé à l'étape 1 via Ansible. Go (pour Terratest) sera installé à l'étape 5. → Voir <a href="#annexe-outils" style="color:#fde68a">Annexe : vérifier un outil</a> si besoin.
+      </div>
+
+      <p class="code-label">Vérifier les outils pré-installés</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>terraform version
+ansible --version</div>
+
+      <div class="verif-section">
+        <h4>✔ Points à valider</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Terraform ≥ 1.5 disponible
+            <span class="cmd">terraform version</span>
+            <div class="expected-output">Terraform v1.5.x ou supérieur</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Ansible ≥ 2.14 disponible
+            <span class="cmd">ansible --version</span>
+            <div class="expected-output">ansible [core 2.14.x] ou supérieur</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Se positionner dans le bon dossier
+            <span class="cmd">cd ~/3iac1-lab-starter</span>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Créer ton fichier de variables local à partir du modèle
+            <span class="cmd">cp tp-3tiers/terraform/terraform.tfvars.example tp-3tiers/terraform/terraform.tfvars</span>
+            <div style="margin-top:0.5rem; padding:0.6rem 0.9rem; background:rgba(168,85,247,0.08); border-left:3px solid var(--accent2); border-radius:0 6px 6px 0; font-size:0.83rem; color:#d8b4fe;">
+              <strong style="color:var(--accent2)">💡 Pattern .example / .tfvars</strong><br>
+              <code>terraform.tfvars.example</code> est commité dans git : c'est le modèle partagé qui montre quelles variables existent.<br>
+              <code>terraform.tfvars</code> est dans le <code>.gitignore</code> : c'est ton fichier local avec tes valeurs réelles. Il ne doit jamais être commité car il peut contenir des secrets.<br>
+              Tu retrouveras ce même pattern partout : <code>.env.example</code> / <code>.env</code> dans les projets web, <code>config.yml.example</code> / <code>config.yml</code> dans d'autres outils.
+            </div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Définir le mot de passe DB via variable d'environnement
+            <span class="cmd">export TF_VAR_db_password="MonMotDePasseSecret42"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 1 — Docker via Ansible -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape1">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">1</div>
+      <h2>Installer Docker via Ansible</h2>
+      <span class="duration">⏱ 15–20 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Utiliser Ansible pour installer Docker sur l'OVA. C'est Ansible qui gère la configuration du système, pas Terraform.
+      </div>
+
+      <div class="prereq">
+        <strong>📋 Rappel clé :</strong> Ansible utilise le module <code>apt</code> pour installer des paquets sur Ubuntu/Debian. Le paramètre <code>become: yes</code> est nécessaire pour les opérations root.
+      </div>
+
+      <p>Ouvre le fichier <code>tp-3tiers/ansible/playbooks/01-install-docker.yml</code> et complète la tâche d'installation manquante.</p>
+
+      <p class="code-label">Fichier à compléter</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># tp-3tiers/ansible/playbooks/01-install-docker.yml
+
+- name: "Installer Docker et ses dépendances"
+  # ← COMPLÉTER ICI
+  # Module à utiliser : apt
+  # Packages : docker.io, docker-compose-plugin, python3-docker
+  # Ne pas oublier : state: present, update_cache: yes</div>
+
+      <div class="tip">
+        <strong>💡 Conseil :</strong> La liste de packages peut s'écrire en YAML inline : <code>name: [pkg1, pkg2]</code> ou sur plusieurs lignes avec des tirets.
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠ Piège classique :</strong> Oublier <code>become: yes</code> pour l'installation de paquets provoque une erreur de permission. Et attention à ne pas démarrer le service <em>avant</em> de l'installer !
+      </div>
+
+      <p class="code-label">Lancer le playbook</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/ansible
+ansible-playbook playbooks/01-install-docker.yml -v</div>
+
+      <div class="verif-section">
+        <h4>✔ Vérifications après l'étape 1</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Docker est installé et actif
+            <span class="cmd">systemctl is-active docker</span>
+            <div class="expected-output">active</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Docker fonctionne sans sudo
+            <span class="cmd">docker ps</span>
+            <div class="expected-output">CONTAINER ID   IMAGE   COMMAND   ...</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Le playbook est idempotent (relancer sans erreur ni changement)
+            <span class="cmd">ansible-playbook playbooks/01-install-docker.yml</span>
+            <div class="expected-output">ok=5   changed=0   unreachable=0   failed=0</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">python3-docker est installé (nécessaire pour Ansible ↔ Docker)
+            <span class="cmd">python3 -c "import docker; print(docker.__version__)"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 2 — Réseaux Terraform -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape2">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">2</div>
+      <h2>Créer les réseaux Docker avec Terraform</h2>
+      <span class="duration">⏱ 15–20 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Créer 3 réseaux Docker via Terraform. Le réseau <code>db_net</code> doit être <strong>internal=true</strong> pour qu'aucun conteneur dessus ne puisse initier de connexion vers internet.
+      </div>
+
+      <p>Ouvre <code>tp-3tiers/terraform/main.tf</code> et complète les 3 blocs <code>docker_network</code>.</p>
+
+      <div class="tip">
+        <strong>💡 Rappel :</strong> <code>internal = true</code> sur un réseau Docker empêche le trafic sortant vers l'extérieur. C'est la clé de l'isolation de la couche base de données.
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠ Question de sécurité :</strong> Pourquoi <code>dmz_net</code> ne doit-il PAS être <code>internal</code> ? Réfléchis avant de regarder le QCM.
+      </div>
+
+      <p class="code-label">Initialiser et appliquer Terraform</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/terraform
+
+# Première fois uniquement
+terraform init
+
+# Voir ce qui va être créé
+terraform plan
+
+# Créer l'infrastructure
+terraform apply</div>
+
+      <div class="verif-section">
+        <h4>✔ Vérifications après l'étape 2</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Les 3 réseaux sont créés
+            <span class="cmd">docker network ls | grep -E "dmz_net|app_net|db_net"</span>
+            <div class="expected-output">3 lignes doivent apparaître</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">db_net est bien internal=true
+            <span class="cmd">docker network inspect db_net | grep -i internal</span>
+            <div class="expected-output">"Internal": true</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">dmz_net et app_net ne sont PAS internal
+            <span class="cmd">docker network inspect dmz_net | grep -i internal</span>
+            <div class="expected-output">"Internal": false</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">L'output Terraform confirme db_net.internal
+            <span class="cmd">terraform output db_network_internal</span>
+            <div class="expected-output">true</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 3 — Conteneur PostgreSQL -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape3">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">3</div>
+      <h2>Déployer PostgreSQL (sans port exposé)</h2>
+      <span class="duration">⏱ 15–20 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Configurer le conteneur PostgreSQL dans <code>main.tf</code> avec 3 contraintes de sécurité : réseau <code>db_net</code> uniquement, aucun port exposé vers l'hôte, volume persistant monté.
+      </div>
+
+      <p>Complète le bloc <code>resource "docker_container" "postgres"</code> dans <code>tp-3tiers/terraform/main.tf</code>.</p>
+
+      <div class="tip">
+        <strong>💡 Rappel architecture :</strong> Flask peut joindre PostgreSQL via le nom du conteneur (<code>postgres</code>) parce qu'ils sont tous les deux sur <code>db_net</code>. Mais personne de l'extérieur ne doit pouvoir joindre PostgreSQL directement → pas de bloc <code>ports {}</code>.
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠ Piège classique :</strong> Ajouter <code>ports { internal = 5432; external = 5432 }</code> expose la base de données sur le réseau de l'hôte. En production c'est une faille critique.
+      </div>
+
+      <p class="code-label">Variables d'environnement PostgreSQL attendues</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>POSTGRES_DB       ← var.db_name
+POSTGRES_USER     ← var.db_user
+POSTGRES_PASSWORD ← var.db_password  (variable sensitive !)</div>
+
+      <p class="code-label">Appliquer les modifications</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>terraform apply</div>
+
+      <div class="verif-section">
+        <h4>✔ Vérifications après l'étape 3</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Le conteneur postgres tourne
+            <span class="cmd">docker ps | grep postgres</span>
+            <div class="expected-output">postgres   postgres:15-alpine   Up X seconds</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Aucun port exposé pour postgres
+            <span class="cmd">docker port postgres</span>
+            <div class="expected-output">(aucune sortie — c'est normal et voulu)</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">postgres est bien sur db_net uniquement
+            <span class="cmd">docker inspect postgres | grep -A5 '"Networks"'</span>
+            <div class="expected-output">Seul "db_net" doit apparaître</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Le volume pg_data est monté
+            <span class="cmd">docker inspect postgres | grep -A3 Mounts</span>
+            <div class="expected-output">"Destination": "/var/lib/postgresql/data"</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">PostgreSQL accepte les connexions depuis Flask (via db_net)
+            <span class="cmd">docker exec flask_app python3 -c "import psycopg2; print('OK')" 2>/dev/null || echo "Flask pas encore configuré"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 4 — Nginx + Ansible Vault -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape4">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">4</div>
+      <h2>Configurer Nginx (sécurité) + Ansible Vault</h2>
+      <span class="duration">⏱ 20–25 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Compléter le template Nginx avec les en-têtes de sécurité et le rate limiting. Chiffrer le mot de passe DB avec Ansible Vault.
+      </div>
+
+      <p><strong>Partie A — Template Nginx</strong></p>
+      <p>Complète <code>tp-3tiers/ansible/templates/nginx.conf.j2</code> en ajoutant les éléments manquants.</p>
+
+      <p class="code-label">Éléments de sécurité à ajouter dans le template</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># 1. Désactiver la divulgation de version
+server_tokens off;
+
+# 2. En-têtes de sécurité (dans le bloc server {})
+add_header X-Frame-Options "SAMEORIGIN";
+add_header X-Content-Type-Options "nosniff";
+add_header X-XSS-Protection "1; mode=block";
+add_header Referrer-Policy "strict-origin";
+
+# 3. Rate limiting (dans location /)
+limit_req zone=app burst=20 nodelay;
+
+# 4. Masquer le header applicatif
+proxy_hide_header X-Powered-By;</div>
+
+      <p style="margin-top:1.2rem"><strong>Partie B — Ansible Vault</strong></p>
+      <p>Chiffre le mot de passe de la base de données avec Ansible Vault pour ne plus l'avoir en clair dans <code>group_vars/all.yml</code>.</p>
+
+      <p class="code-label">Créer un fichier vault password (ne jamais committer)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>echo "MonMotDePasseVault" > tp-3tiers/ansible/.vault_pass
+chmod 600 tp-3tiers/ansible/.vault_pass</div>
+
+      <p class="code-label">Chiffrer la valeur du mot de passe DB</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/ansible
+ansible-vault encrypt_string 'MonMotDePasseSecret42' \
+  --name 'db_password' \
+  --vault-password-file .vault_pass</div>
+
+      <p class="code-label">Copier la sortie dans group_vars/all.yml (exemple)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># group_vars/all.yml
+db_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  61383930613365336338323866343862...  ← ta valeur chiffrée ici</div>
+
+      <div class="tip">
+        <strong>💡 Rappel :</strong> <code>!vault</code> est le tag YAML qui indique à Ansible que la valeur est chiffrée. Ansible la déchiffre automatiquement au moment de l'exécution si le vault password est fourni.
+      </div>
+
+      <p class="code-label">Déployer la configuration Nginx</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible-playbook playbooks/02-configure-nginx.yml \
+  --vault-password-file .vault_pass -v</div>
+
+      <div class="verif-section">
+        <h4>✔ Vérifications après l'étape 4</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">La config Nginx est valide
+            <span class="cmd">docker exec nginx nginx -t</span>
+            <div class="expected-output">nginx: configuration file ... syntax is ok</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">server_tokens est désactivé (pas de version dans les réponses)
+            <span class="cmd">curl -I http://localhost 2>/dev/null | grep -i server</span>
+            <div class="expected-output">Server: nginx  (sans numéro de version)</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">En-têtes de sécurité présents
+            <span class="cmd">curl -I http://localhost 2>/dev/null | grep -iE "x-frame|x-content|x-xss"</span>
+            <div class="expected-output">X-Frame-Options: SAMEORIGIN</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Vault : le mot de passe est chiffré dans group_vars/all.yml
+            <span class="cmd">grep -A2 "db_password" group_vars/all.yml</span>
+            <div class="expected-output">db_password: !vault |  $ANSIBLE_VAULT...</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Vault : Ansible peut déchiffrer la variable
+            <span class="cmd">ansible localhost -m debug -a "var=db_password" --vault-password-file .vault_pass</span>
+            <div class="expected-output">db_password: MonMotDePasseSecret42</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ÉTAPE 5 — Terratest -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="etape5">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">5</div>
+      <h2>Tester l'infrastructure avec Terratest</h2>
+      <span class="duration">⏱ 15–20 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div class="objectif">
+        <strong>Objectif :</strong> Compléter le fichier <code>tp-3tiers/test/infrastructure_test.go</code> pour tester automatiquement que : <code>db_net</code> est <code>internal=true</code>, Nginx répond HTTP 200, et PostgreSQL n'expose aucun port.
+      </div>
+
+      <div class="prereq">
+        <strong>📋 Principe Terratest :</strong> Le test déploie l'infra, vérifie des assertions, puis <strong>détruit</strong> l'infra. La destruction doit être garantie même si le test échoue → c'est le rôle de <code>defer</code>.
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠ Ordre critique :</strong> <code>defer terraform.Destroy()</code> doit être déclaré <em>avant</em> <code>InitAndApply()</code>. Si tu le mets après, un échec de Apply laisserait l'infra orpheline.
+      </div>
+
+      <p class="code-label">Structure attendue du test (à compléter)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>func TestInfrastructure3Tiers(t *testing.T) {
+    opts := &terraform.Options{
+        TerraformDir: "../terraform",
+        // ...
+    }
+
+    // ← ÉTAPE 1 : defer Destroy AVANT InitAndApply
+    defer terraform.Destroy(t, opts)
+
+    // ← ÉTAPE 2 : déployer
+    terraform.InitAndApply(t, opts)
+
+    // ← ÉTAPE 3 : tester db_net.Internal == true
+    // ← ÉTAPE 4 : tester HTTP GET localhost → 200
+}</div>
+
+      <p class="code-label">Installer Go si besoin, puis les dépendances</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Vérifier Go (sinon voir Annexe : vérification outils)
+go version
+
+cd tp-3tiers/test
+go mod tidy</div>
+
+      <p class="code-label">Lancer les tests</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/test
+TF_VAR_db_password="MonMotDePasseSecret42" \
+  go test -v -timeout 10m ./...</div>
+
+      <div class="verif-section">
+        <h4>✔ Vérifications après l'étape 5</h4>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Les dépendances Go sont installées
+            <span class="cmd">ls tp-3tiers/test/go.sum</span>
+            <div class="expected-output">Le fichier go.sum existe</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Test db_net_is_internal passe
+            <span class="cmd">go test -v -run TestInfrastructure3Tiers/db_net_is_internal ./...</span>
+            <div class="expected-output">--- PASS: TestInfrastructure3Tiers/db_net_is_internal</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Test nginx_responds_200 passe
+            <span class="cmd">go test -v -run TestInfrastructure3Tiers/nginx_responds_200 ./...</span>
+            <div class="expected-output">--- PASS: TestInfrastructure3Tiers/nginx_responds_200</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">L'infra est détruite après le test
+            <span class="cmd">docker ps | grep -E "nginx|flask|postgres|redis"</span>
+            <div class="expected-output">(aucune sortie — les conteneurs ont été détruits)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- RÉCAPITULATIF -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="recap">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num">✓</div>
+      <h2>Récapitulatif — Ce que tu as appris</h2>
+      <span class="duration">⏱ 5 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div style="background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.3); border-radius:10px; padding:1rem;">
+          <div style="font-weight:700; color:#a78bfa; margin-bottom:0.5rem;">🔵 Ansible</div>
+          <ul style="font-size:0.83rem; color:var(--muted); padding-left:1.2rem; line-height:1.8">
+            <li>Module <code>apt</code> pour paquets système</li>
+            <li>Ordre tasks : install → start → user</li>
+            <li>Ansible Vault + tag <code>!vault</code></li>
+            <li>Template Jinja2 (<code>nginx.conf.j2</code>)</li>
+            <li>Handlers pour rechargement</li>
+          </ul>
+        </div>
+        <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:10px; padding:1rem;">
+          <div style="font-weight:700; color:#60a5fa; margin-bottom:0.5rem;">🟣 Terraform</div>
+          <ul style="font-size:0.83rem; color:var(--muted); padding-left:1.2rem; line-height:1.8">
+            <li><code>internal = true</code> pour isolation réseau</li>
+            <li>Pas de bloc <code>ports {}</code> = pas d'exposition</li>
+            <li>Variables <code>sensitive = true</code></li>
+            <li><code>templatefile()</code> → inventaire Ansible</li>
+            <li><code>depends_on</code> pour l'ordre</li>
+          </ul>
+        </div>
+        <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:1rem;">
+          <div style="font-weight:700; color:#34d399; margin-bottom:0.5rem;">🟢 Terratest</div>
+          <ul style="font-size:0.83rem; color:var(--muted); padding-left:1.2rem; line-height:1.8">
+            <li><code>defer Destroy</code> avant <code>Apply</code></li>
+            <li>Docker API pour inspecter les réseaux</li>
+            <li><code>HttpGetWithRetry</code> vs <code>time.Sleep</code></li>
+            <li>Assertions <code>assert.True</code></li>
+          </ul>
+        </div>
+        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:1rem;">
+          <div style="font-weight:700; color:#f87171; margin-bottom:0.5rem;">🔴 Sécurité</div>
+          <ul style="font-size:0.83rem; color:var(--muted); padding-left:1.2rem; line-height:1.8">
+            <li>Réseau interne = isolation BDD</li>
+            <li>Pas de port 5432 exposé</li>
+            <li>Nginx : <code>server_tokens off</code></li>
+            <li>Rate limiting <code>limit_req</code></li>
+            <li>En-têtes sécurité HTTP</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="code-label">Nettoyage final</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/terraform
+terraform destroy</div>
+
+      <div class="tip">
+        <strong>💡 Et ensuite ?</strong> Ce même pattern (Terraform pour l'infra, Ansible pour la config, Terratest pour valider) s'applique à AWS, GCP, Azure — seul le provider Terraform change. La logique reste identique.
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ANNEXE A — Index de vérification des outils -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="annexe-outils">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num" style="background:var(--muted);font-size:0.75rem">A</div>
+      <h2>Annexe — Vérifier l'installation d'un outil</h2>
+      <span class="duration">Référence</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body collapsed">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem">Référence rapide pour vérifier qu'un outil est correctement installé et opérationnel, quel que soit le moment où tu l'as installé.</p>
+
+      <p style="font-weight:700;color:var(--accent2);margin-bottom:0.6rem">Terraform</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>terraform version
+# Attendu : Terraform v1.5.x ou supérieur
+
+terraform -help
+# Vérifie que la commande répond correctement</div>
+
+      <p style="font-weight:700;color:var(--accent2);margin:1rem 0 0.6rem">Ansible</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible --version
+# Attendu : ansible [core 2.14.x] ou supérieur
+
+ansible localhost -m ping
+# Attendu : localhost | SUCCESS => {"ping": "pong"}</div>
+
+      <p style="font-weight:700;color:var(--accent2);margin:1rem 0 0.6rem">Docker</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>docker --version
+# Attendu : Docker version 24.x ou supérieur
+
+systemctl is-active docker
+# Attendu : active
+
+docker ps
+# Attendu : liste vide ou liste de conteneurs (sans erreur de permission)
+
+# Si "permission denied" → se déconnecter/reconnecter pour que le groupe docker soit pris en compte
+groups | grep docker</div>
+
+      <p style="font-weight:700;color:var(--accent2);margin:1rem 0 0.6rem">Go (pour Terratest)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>go version
+# Attendu : go version go1.21.x linux/amd64
+
+# Si Go n'est pas installé sur l'OVA :
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+go version</div>
+
+      <div class="tip">
+        <strong>💡 Rappel :</strong> Après avoir ajouté ton utilisateur au groupe <code>docker</code> (étape 1), il faut se déconnecter et se reconnecter à la session SSH pour que le changement soit effectif.
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ANNEXE B — Travailler sans l'OVA -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="step" id="annexe-hors-ova">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num" style="background:var(--muted);font-size:0.75rem">B</div>
+      <h2>Annexe — Travailler sur sa machine personnelle (hors OVA)</h2>
+      <span class="duration">Optionnel</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body collapsed">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem">Le TP est conçu pour l'OVA Ubuntu 22.04. Il peut également être joué sur ta machine personnelle avec quelques adaptations selon ton système.</p>
+
+      <div class="warning-box">
+        <strong>⚠ Note IDE :</strong> L'OVA ne dispose pas d'interface graphique ni d'IDE. Si tu travailles sur ta machine personnelle, installe <strong>VS Code</strong> avec les extensions : <code>HashiCorp Terraform</code>, <code>Ansible</code> (Red Hat), <code>Go</code> (Google). Tu bénéficieras de l'autocomplétion, de la coloration syntaxique et de la validation en temps réel.
+      </div>
+
+      <!-- WSL2 -->
+      <p style="font-weight:700;color:#60a5fa;margin:1.2rem 0 0.6rem">🪟 Windows avec WSL2</p>
+      <div class="prereq">
+        <strong>Prérequis :</strong> Windows 10/11 avec WSL2 activé + Docker Desktop avec l'intégration WSL2 cochée dans les paramètres.
+      </div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Dans un terminal WSL2 (Ubuntu) :
+
+# 1. Terraform
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+
+# 2. Ansible
+sudo apt install ansible
+
+# 3. Docker — NE PAS installer dans WSL2, utiliser Docker Desktop
+#    Activer : Docker Desktop → Settings → Resources → WSL Integration → cocher Ubuntu
+docker ps  # doit fonctionner sans sudo dans WSL2
+
+# 4. Go
+sudo apt install golang-go
+# OU version récente via le binaire :
+# wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz && ...
+
+# 5. Cloner le repo
+git clone &lt;url-du-repo&gt; ~/3iac1-lab-starter</div>
+      <div class="tip">
+        <strong>💡 Accès à l'app :</strong> Nginx expose le port 80 → accessible depuis Windows via <code>http://localhost</code> dans ton navigateur.
+      </div>
+
+      <!-- macOS Intel -->
+      <p style="font-weight:700;color:#a78bfa;margin:1.5rem 0 0.6rem">🍎 macOS Intel (AMD64)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Prérequis : Homebrew (https://brew.sh) + Docker Desktop pour Mac
+
+brew install terraform
+brew install ansible
+brew install go
+
+# Docker Desktop : installer depuis https://www.docker.com/products/docker-desktop/
+docker ps  # vérifier que Docker tourne
+
+git clone &lt;url-du-repo&gt; ~/3iac1-lab-starter</div>
+
+      <!-- macOS Apple Silicon -->
+      <p style="font-weight:700;color:#f0883e;margin:1.5rem 0 0.6rem">🍎 macOS Apple Silicon (ARM64 / M1, M2, M3)</p>
+      <div class="prereq">
+        <strong>Bonne nouvelle :</strong> Terraform, Ansible, Go et Docker Desktop ont tous des builds natifs ARM64. Les images Docker utilisées (<code>postgres:15-alpine</code>, <code>nginx:alpine</code>, <code>redis:7-alpine</code>) ont également des builds ARM64 officiels — aucune émulation nécessaire.
+      </div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Identique à macOS Intel :
+brew install terraform
+brew install ansible
+brew install go
+
+# Docker Desktop ARM64 : https://www.docker.com/products/docker-desktop/
+docker ps
+
+git clone &lt;url-du-repo&gt; ~/3iac1-lab-starter</div>
+      <div class="tip">
+        <strong>💡 Seule différence ARM64 :</strong> Le provider Terraform <code>kreuzwerker/docker</code> dispose d'un binaire <code>darwin_arm64</code> — <code>terraform init</code> le télécharge automatiquement. Aucune manipulation manuelle.
+      </div>
+
+      <!-- Linux natif -->
+      <p style="font-weight:700;color:#34d399;margin:1.5rem 0 0.6rem">🐧 Linux natif (hors OVA)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Ubuntu / Debian — même procédure que l'OVA
+# Terraform + Ansible : voir Annexe A
+# Docker : sudo apt install docker.io && sudo usermod -aG docker $USER
+# Go : voir Annexe A</div>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ── Toggle étape ──────────────────────────────────────────────────────
+  function toggleStep(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    if (body.classList.contains('collapsed')) {
+      body.classList.remove('collapsed');
+      chevron.textContent = '▼';
+      chevron.style.transform = 'rotate(0)';
+    } else {
+      body.classList.add('collapsed');
+      chevron.textContent = '▼';
+      chevron.style.transform = 'rotate(-90deg)';
+    }
+  }
+
+  // ── Cocher une vérification ───────────────────────────────────────────
+  function toggleCheck(box) {
+    box.classList.toggle('checked');
+    if (box.classList.contains('checked')) box.textContent = '✓';
+    else box.textContent = '';
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const all = document.querySelectorAll('.check-box');
+    const done = document.querySelectorAll('.check-box.checked');
+    const pct = all.length > 0 ? Math.round((done.length / all.length) * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = done.length + ' / ' + all.length;
+  }
+
+  // ── Copier code ───────────────────────────────────────────────────────
+  function copyCode(btn) {
+    const block = btn.parentElement;
+    // Clone sans le bouton
+    const clone = block.cloneNode(true);
+    clone.querySelector('.copy-btn').remove();
+    const text = clone.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copié !';
+      setTimeout(() => { btn.textContent = 'Copier'; }, 1500);
+    });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    updateProgress();
+    // Ouvrir la première étape par défaut
+    const first = document.querySelector('.step-body');
+    if (first) first.classList.remove('collapsed');
+  });
+</script>
+
+</body>
+</html>

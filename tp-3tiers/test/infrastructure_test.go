@@ -1,0 +1,91 @@
+// =============================================================================
+// TP 3IAC1 — Tests d'infrastructure avec Terratest
+// infrastructure_test.go
+// Lancer : go test -v -timeout 10m ./...
+// =============================================================================
+
+package test
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/api/types"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestInfrastructure3Tiers(t *testing.T) {
+	t.Parallel()
+
+	// ── Configuration Terraform ──────────────────────────────────────────────
+	opts := &terraform.Options{
+		TerraformDir: "../terraform/tp-3tiers",
+		Vars: map[string]interface{}{
+			"deploy_environment": "dev",
+			"db_name":            "testdb",
+			"db_user":            "testuser",
+		},
+		EnvVars: map[string]string{
+			// Le mot de passe est passé via variable d'environnement
+			"TF_VAR_db_password": "test_password_ci",
+		},
+	}
+
+	// TODO Q5 : Ajouter le defer pour détruire l'infra après le test
+	// Indice : terraform.Destroy() avec les mêmes opts
+	// IMPORTANT : defer doit être déclaré AVANT InitAndApply
+
+	// ── Déploiement ──────────────────────────────────────────────────────────
+	terraform.InitAndApply(t, opts)
+
+	// ── Test 1 : db_net doit être internal=true ───────────────────────────────
+	t.Run("db_net_is_internal", func(t *testing.T) {
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		assert.NoError(t, err, "Impossible de créer le client Docker")
+		defer cli.Close()
+
+		// TODO Q5 : Inspecter le réseau "db_net" et vérifier net.Internal == true
+		net, err := cli.NetworkInspect(context.Background(), "db_net", types.NetworkInspectOptions{})
+		assert.NoError(t, err, "Réseau db_net introuvable")
+
+		// TODO : compléter l'assertion
+		assert.True(t, net.Internal, "db_net doit avoir internal=true pour isoler la BDD")
+	})
+
+	// ── Test 2 : Nginx doit répondre HTTP 200 ────────────────────────────────
+	t.Run("nginx_responds_200", func(t *testing.T) {
+		// TODO Q5 : Utiliser http_helper.HttpGetWithRetry (pas time.Sleep !)
+		// Paramètres : url, tlsConfig, expectedStatus, expectedBody, retries, sleepBetween
+		http_helper.HttpGetWithRetry(
+			t,
+			"http://localhost",
+			nil,
+			200,
+			"",  // on ne vérifie pas le body pour ce test
+			5,
+			10*time.Second,
+		)
+	})
+
+	// ── Test 3 (bonus) : PostgreSQL ne doit pas avoir de port exposé ─────────
+	t.Run("postgres_no_exposed_port", func(t *testing.T) {
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		assert.NoError(t, err)
+		defer cli.Close()
+
+		containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+		assert.NoError(t, err)
+
+		for _, c := range containers {
+			for _, name := range c.Names {
+				if name == "/postgres" {
+					assert.Empty(t, c.Ports, "Le conteneur postgres ne doit exposer aucun port vers l'hôte")
+				}
+			}
+		}
+	})
+}

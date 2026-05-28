@@ -14,8 +14,18 @@ tfplan
 output/
 servers/
 
-# Inventaire généré par Terraform (recréé par terraform apply)
-ansible/inventories/generated.ini
+# Inventaires générés par Terraform (recréés par terraform apply)
+tp-03-ansible/inventories/generated.ini
+tp-05-3tiers/ansible/inventories/generated.ini
+
+# Ansible Vault password file
+.vault_pass
+vault_password_file
+**/.vault_pass
+
+# Go (Terratest)
+tp-05-3tiers/test/vendor/
+tp-05-3tiers/test/go.sum
 
 # Éditeurs
 .vscode/

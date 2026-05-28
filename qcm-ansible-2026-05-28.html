@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QCM Ansible — 3IAC1</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1e293b, #1a2010);
+      border-radius: 16px;
+      border: 1px solid #334155;
+    }
+    header h1 { font-size: 2rem; color: #16a34a; margin-bottom: .4rem; }
+    header .subtitle { color: #94a3b8; font-size: .95rem; }
+    header .meta { display: flex; gap: 1.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    header .badge {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: .3rem .8rem;
+      font-size: .82rem;
+      color: #86efac;
+    }
+    .actions-top {
+      display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center;
+    }
+    .btn {
+      padding: .6rem 1.4rem;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-primary { background: #16a34a; color: #fff; }
+    .btn-primary:hover { background: #15803d; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+    .btn-success { background: #0369a1; color: #fff; }
+    .btn-success:hover { background: #075985; }
+    .question-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1.4rem;
+      transition: border-color .2s;
+    }
+    .question-card:hover { border-color: #16a34a; }
+    .question-header {
+      display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1rem;
+    }
+    .q-num {
+      background: #16a34a; color: #fff;
+      font-weight: 700; font-size: .78rem;
+      padding: .2rem .55rem; border-radius: 6px;
+      white-space: nowrap; margin-top: 2px;
+    }
+    .q-text { font-size: 1rem; font-weight: 600; color: #f1f5f9; line-height: 1.5; }
+    .q-note { font-size: .78rem; color: #f59e0b; margin-top: .3rem; }
+    .options { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+    .option {
+      display: flex; align-items: flex-start; gap: .7rem;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: .65rem 1rem;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .option:hover { background: #0f2010; border-color: #16a34a; }
+    .option input { margin-top: 2px; accent-color: #16a34a; }
+    .option label { cursor: pointer; font-size: .93rem; color: #cbd5e1; line-height: 1.45; }
+    .option.correct { background: #052e16; border-color: #22c55e; }
+    .option.correct label { color: #86efac; }
+    .option.incorrect { background: #2d0a0a; border-color: #ef4444; }
+    .option.incorrect label { color: #fca5a5; }
+    .correction-zone {
+      display: none;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: 1rem 1.2rem;
+      margin-top: .5rem; font-size: .88rem; line-height: 1.7;
+    }
+    .correction-zone.visible { display: block; }
+    .correction-zone .answer-label { font-weight: 700; color: #22c55e; margin-bottom: .4rem; }
+    .correction-zone .explication { color: #94a3b8; }
+    .correction-zone .wrong-note { color: #f87171; margin-top: .5rem; }
+    .btn-show {
+      background: #334155; color: #94a3b8;
+      border: none; border-radius: 6px;
+      padding: .35rem .85rem; font-size: .8rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-show:hover { background: #475569; color: #e2e8f0; }
+    .score-zone {
+      display: none;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 1.5rem;
+      text-align: center; margin-bottom: 2rem;
+    }
+    .score-zone .score-val { font-size: 2.5rem; font-weight: 800; color: #16a34a; }
+    .score-zone p { color: #94a3b8; margin-top: .4rem; }
+    code {
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 4px; padding: .1em .35em;
+      font-family: 'Fira Code', monospace; font-size: .85em; color: #86efac;
+    }
+    footer {
+      text-align: center; color: #475569; font-size: .8rem;
+      margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #1e293b;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🟢 QCM Ansible</h1>
+    <p class="subtitle">Révisions pour l'examen — Formation 3IAC1</p>
+    <div class="meta">
+      <span class="badge">📅 28 mai 2026</span>
+      <span class="badge">🎯 20 questions</span>
+      <span class="badge">⏱ ~25 min</span>
+      <span class="badge">📚 Niveau Bachelor 3</span>
+    </div>
+  </header>
+
+  <div class="actions-top">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <div class="score-zone" id="scoreZone">
+    <div class="score-val" id="scoreVal"></div>
+    <p id="scoreMsg"></p>
+  </div>
+
+  <!-- Q1 — correct : c -->
+  <div class="question-card" id="q1">
+    <div class="question-header">
+      <span class="q-num">Q1</span>
+      <div><div class="q-text">Quelle est la principale caractéristique architecturale d'Ansible qui le distingue d'outils comme Chef ou Puppet ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q1" id="q1a" value="a"><label for="q1a">a) Ansible utilise un langage propriétaire compilé pour décrire les tâches</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1b" value="b"><label for="q1b">b) Ansible nécessite l'installation d'un daemon (agent) sur chaque hôte cible</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1c" value="c"><label for="q1c">c) Ansible est <strong>agentless</strong> : il se connecte via SSH (ou en local) sans installer de logiciel sur les cibles</label></div>
+      <div class="option"><input type="radio" name="q1" id="q1d" value="d"><label for="q1d">d) Ansible ne peut fonctionner que sur des infrastructures cloud</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr1')">Voir la correction</button>
+    <div class="correction-zone" id="corr1">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">L'architecture <strong>agentless</strong> est la marque de fabrique d'Ansible. Contrairement à Chef ou Puppet qui nécessitent un agent en permanence sur les machines gérées, Ansible n'a besoin que d'une connexion SSH (ou <code>ansible_connection=local</code> pour les TP du projet). Cela simplifie la mise en place et la maintenance.</div>
+      <div class="wrong-note">b) décrit le modèle agent-based de Chef/Puppet, l'opposé d'Ansible.</div>
+    </div>
+  </div>
+
+  <!-- Q2 — correct : d -->
+  <div class="question-card" id="q2">
+    <div class="question-header">
+      <span class="q-num">Q2</span>
+      <div><div class="q-text">Quel est le rôle du fichier <code>ansible.cfg</code> dans un projet Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q2" id="q2a" value="a"><label for="q2a">a) Lister les hôtes cibles et leurs adresses IP</label></div>
+      <div class="option"><input type="radio" name="q2" id="q2b" value="b"><label for="q2b">b) Définir les tâches à exécuter sur les hôtes</label></div>
+      <div class="option"><input type="radio" name="q2" id="q2c" value="c"><label for="q2c">c) Stocker les variables d'environnement chiffrées</label></div>
+      <div class="option"><input type="radio" name="q2" id="q2d" value="d"><label for="q2d">d) Configurer le comportement global d'Ansible (chemin de l'inventaire, des rôles, vérification SSH…)</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr2')">Voir la correction</button>
+    <div class="correction-zone" id="corr2">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>ansible.cfg</code> est le fichier de configuration globale. Dans le projet, il définit : <code>inventory = ./inventories/hosts.ini</code>, <code>roles_path = ./roles</code>, <code>host_key_checking = False</code> et <code>stdout_callback = yaml</code>. Il évite de répéter ces options à chaque ligne de commande.</div>
+      <div class="wrong-note">Les hôtes sont dans l'inventaire <code>hosts.ini</code> (a), les tâches dans les playbooks (b), et les secrets dans Ansible Vault (c).</div>
+    </div>
+  </div>
+
+  <!-- Q3 — correct : a -->
+  <div class="question-card" id="q3">
+    <div class="question-header">
+      <span class="q-num">Q3</span>
+      <div><div class="q-text">Dans l'inventaire du projet, les hôtes sont déclarés avec <code>ansible_connection=local</code>. Qu'est-ce que cela implique ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q3" id="q3a" value="a"><label for="q3a">a) Ansible exécute les tâches directement sur la machine locale, sans ouvrir de connexion SSH</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3b" value="b"><label for="q3b">b) Ansible crée un tunnel SSH chiffré vers localhost</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3c" value="c"><label for="q3c">c) Ansible utilise un agent local pour relayer les connexions réseau</label></div>
+      <div class="option"><input type="radio" name="q3" id="q3d" value="d"><label for="q3d">d) Ansible se connecte uniquement aux hôtes du réseau local (LAN)</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr3')">Voir la correction</button>
+    <div class="correction-zone" id="corr3">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>ansible_connection=local</code> indique à Ansible de ne pas utiliser SSH et d'exécuter les tâches directement sur la machine qui lance la commande. C'est le mode utilisé dans tous les TP du projet (contrainte : pas d'accès à un vrai cloud ni à des VMs distantes). Voir <code>hosts.ini</code> : <code>localhost ansible_connection=local</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q4 — correct : b -->
+  <div class="question-card" id="q4">
+    <div class="question-header">
+      <span class="q-num">Q4</span>
+      <div><div class="q-text">Qu'est-ce qu'un <strong>playbook</strong> Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q4" id="q4a" value="a"><label for="q4a">a) Un script Python exécuté directement sur les hôtes distants</label></div>
+      <div class="option"><input type="radio" name="q4" id="q4b" value="b"><label for="q4b">b) Un fichier YAML décrivant un ou plusieurs plays (groupe d'hôtes + liste de tâches) à exécuter</label></div>
+      <div class="option"><input type="radio" name="q4" id="q4c" value="c"><label for="q4c">c) Un fichier de configuration des providers comme dans Terraform</label></div>
+      <div class="option"><input type="radio" name="q4" id="q4d" value="d"><label for="q4d">d) Une liste d'inventaires à combiner pour un déploiement multi-environnement</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr4')">Voir la correction</button>
+    <div class="correction-zone" id="corr4">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">Un playbook est un fichier YAML structuré en <em>plays</em>. Chaque play cible un groupe d'hôtes (<code>hosts: webservers</code>) et contient une liste de tâches (<code>tasks:</code>). On peut avoir plusieurs plays dans un même playbook. Le projet contient 4 playbooks : <code>setup-system.yml</code>, <code>generate-config.yml</code>, <code>use-role.yml</code>, <code>deploy.yml</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q5 — correct : c -->
+  <div class="question-card" id="q5">
+    <div class="question-header">
+      <span class="q-num">Q5</span>
+      <div><div class="q-text">Que signifie le principe d'<strong>idempotence</strong> dans le contexte d'Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q5" id="q5a" value="a"><label for="q5a">a) Qu'Ansible peut s'exécuter en parallèle sur tous les hôtes simultanément</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5b" value="b"><label for="q5b">b) Qu'Ansible génère toujours le même fichier de log, quelle que soit l'exécution</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5c" value="c"><label for="q5c">c) Qu'exécuter un playbook plusieurs fois aboutit au même état final, sans effet secondaire indésirable</label></div>
+      <div class="option"><input type="radio" name="q5" id="q5d" value="d"><label for="q5d">d) Qu'Ansible vérifie l'état du système avant chaque connexion SSH</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr5')">Voir la correction</button>
+    <div class="correction-zone" id="corr5">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">L'idempotence signifie qu'une opération appliquée N fois donne le même résultat qu'appliquée une seule fois. Dans <code>setup-system.yml</code>, si les dossiers existent déjà, Ansible ne les recrée pas — il signale <code>ok</code> au lieu de <code>changed</code>. Le module <code>file</code> avec <code>state: directory</code> est idempotent par nature. La tâche <code>copy</code> avec <code>force: no</code> illustre aussi ce principe.</div>
+    </div>
+  </div>
+
+  <!-- Q6 — correct : d -->
+  <div class="question-card" id="q6">
+    <div class="question-header">
+      <span class="q-num">Q6</span>
+      <div><div class="q-text">Quel module Ansible est utilisé pour créer des répertoires et gérer leurs permissions ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q6" id="q6a" value="a"><label for="q6a">a) <code>copy</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6b" value="b"><label for="q6b">b) <code>command</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6c" value="c"><label for="q6c">c) <code>template</code></label></div>
+      <div class="option"><input type="radio" name="q6" id="q6d" value="d"><label for="q6d">d) <code>file</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr6')">Voir la correction</button>
+    <div class="correction-zone" id="corr6">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">Le module <code>file</code> gère la création, la suppression et les permissions des fichiers et répertoires. Avec <code>state: directory</code> il crée un dossier, avec <code>state: absent</code> il le supprime. Dans <code>setup-system.yml</code> : <code>file: path: "{{ config_dir }}" state: directory mode: '0755'</code>. C'est l'un des modules les plus utilisés du projet.</div>
+      <div class="wrong-note"><code>copy</code> copie un contenu statique dans un fichier, <code>template</code> rend un template Jinja2, <code>command</code> exécute une commande shell sans idempotence garantie.</div>
+    </div>
+  </div>
+
+  <!-- Q7 — correct : a -->
+  <div class="question-card" id="q7">
+    <div class="question-header">
+      <span class="q-num">Q7</span>
+      <div><div class="q-text">Dans un template Jinja2 utilisé par Ansible, quelle syntaxe permet d'afficher la valeur de la variable <code>app_name</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q7" id="q7a" value="a"><label for="q7a">a) <code>{{ app_name }}</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7b" value="b"><label for="q7b">b) <code>{$ app_name $}</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7c" value="c"><label for="q7c">c) <code>&lt;%= app_name %&gt;</code></label></div>
+      <div class="option"><input type="radio" name="q7" id="q7d" value="d"><label for="q7d">d) <code>[[app_name]]</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr7')">Voir la correction</button>
+    <div class="correction-zone" id="corr7">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">Jinja2 utilise <code>{{ variable }}</code> pour l'interpolation de valeurs. On le voit partout dans les templates du projet : <code>"name": "{{ app_name | default('MyApp') }}"</code> dans <code>app-config.json.j2</code>, ou <code>server_name {{ inventory_hostname }};</code> dans <code>nginx.conf.j2</code>. Attention : c'est différent de la syntaxe HCL de Terraform qui utilise aussi <code>${variable}</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q8 — correct : b + d (multi) -->
+  <div class="question-card" id="q8">
+    <div class="question-header">
+      <span class="q-num">Q8</span>
+      <div>
+        <div class="q-text">Quelles affirmations sur les <strong>handlers</strong> Ansible sont vraies ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q8" id="q8a" value="a"><label for="q8a">a) Un handler s'exécute immédiatement après chaque tâche qui le notifie</label></div>
+      <div class="option"><input type="checkbox" name="q8" id="q8b" value="b"><label for="q8b">b) Un handler ne s'exécute qu'une seule fois en fin de play, même s'il est notifié plusieurs fois</label></div>
+      <div class="option"><input type="checkbox" name="q8" id="q8c" value="c"><label for="q8c">c) Les handlers remplacent les tâches ordinaires dans un rôle</label></div>
+      <div class="option"><input type="checkbox" name="q8" id="q8d" value="d"><label for="q8d">d) Un handler ne s'exécute que si au moins une tâche l'a notifié via <code>notify</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr8')">Voir la correction</button>
+    <div class="correction-zone" id="corr8">
+      <div class="answer-label">✅ Bonnes réponses : b) et d)</div>
+      <div class="explication">
+        <strong>b) Vrai</strong> — Les handlers sont collectés tout au long du play et exécutés une seule fois, en fin de play. Si 3 tâches notifient le même handler, il ne tourne qu'une seule fois.<br>
+        <strong>d) Vrai</strong> — Si aucune tâche ne déclenche de changement (<code>changed</code>), le handler n'est pas exécuté. Dans le rôle <code>app-config</code>, le handler "Recharger configuration" n'est appelé que si le template <code>app.conf.j2</code> a réellement changé.<br>
+        <strong>a) Faux</strong> — Ils s'exécutent en fin de play, pas immédiatement.<br>
+        <strong>c) Faux</strong> — Les handlers complètent les tâches ; ils ne les remplacent pas.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q9 — correct : c -->
+  <div class="question-card" id="q9">
+    <div class="question-header">
+      <span class="q-num">Q9</span>
+      <div><div class="q-text">Que fait le module <code>debug</code> dans un playbook Ansible ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q9" id="q9a" value="a"><label for="q9a">a) Il stoppe l'exécution du playbook pour inspecter les variables en mode interactif</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9b" value="b"><label for="q9b">b) Il active le mode verbose dans <code>ansible.cfg</code> pour cette tâche uniquement</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9c" value="c"><label for="q9c">c) Il affiche un message ou la valeur d'une variable dans la sortie console sans modifier l'hôte</label></div>
+      <div class="option"><input type="radio" name="q9" id="q9d" value="d"><label for="q9d">d) Il génère un rapport HTML des erreurs rencontrées pendant le play</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr9')">Voir la correction</button>
+    <div class="correction-zone" id="corr9">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication"><code>debug</code> est un module de traçabilité qui affiche du texte (<code>msg:</code>) ou la valeur d'une variable (<code>var:</code>) dans la sortie d'Ansible. Il est très utilisé pour vérifier l'état des variables entre les tâches. Dans <code>deploy.yml</code> : <code>debug: msg: "Serveur : {{ inventory_hostname }} | Environnement : {{ deploy_environment }}"</code>. Il ne modifie rien sur l'hôte.</div>
+    </div>
+  </div>
+
+  <!-- Q10 — correct : d -->
+  <div class="question-card" id="q10">
+    <div class="question-header">
+      <span class="q-num">Q10</span>
+      <div><div class="q-text">Quelle directive YAML dans un playbook permet d'élever les privilèges (équivalent de <code>sudo</code>) ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q10" id="q10a" value="a"><label for="q10a">a) <code>sudo: yes</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10b" value="b"><label for="q10b">b) <code>root: true</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10c" value="c"><label for="q10c">c) <code>privilege_escalation: true</code></label></div>
+      <div class="option"><input type="radio" name="q10" id="q10d" value="d"><label for="q10d">d) <code>become: yes</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr10')">Voir la correction</button>
+    <div class="correction-zone" id="corr10">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>become: yes</code> (ou <code>become: true</code>) demande à Ansible d'élever les privilèges via <code>sudo</code> (par défaut). On peut le définir au niveau du play ou d'une tâche individuelle. Dans le projet, tous les playbooks utilisent <code>become: no</code> car les TP sont exécutés en local sans besoin de root. <code>sudo: yes</code> (a) est l'ancienne syntaxe, dépréciée.</div>
+    </div>
+  </div>
+
+  <!-- Q11 — correct : a -->
+  <div class="question-card" id="q11">
+    <div class="question-header">
+      <span class="q-num">Q11</span>
+      <div><div class="q-text">Dans <code>setup-system.yml</code>, une tâche utilise <code>register: created_files</code>. À quoi sert le mot-clé <code>register</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q11" id="q11a" value="a"><label for="q11a">a) Stocker le résultat d'une tâche dans une variable réutilisable dans les tâches suivantes</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11b" value="b"><label for="q11b">b) Enregistrer la tâche dans un fichier de log persistant</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11c" value="c"><label for="q11c">c) Déclarer une variable globale accessible depuis tous les playbooks du projet</label></div>
+      <div class="option"><input type="radio" name="q11" id="q11d" value="d"><label for="q11d">d) Créer un alias pour le nom de la tâche dans les rapports d'exécution</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr11')">Voir la correction</button>
+    <div class="correction-zone" id="corr11">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication"><code>register</code> capture la sortie complète d'une tâche (code retour, stdout, stderr, liste de fichiers…) dans une variable. Dans <code>setup-system.yml</code>, <code>register: created_files</code> stocke le résultat du module <code>find</code>, puis la tâche suivante itère dessus avec <code>loop: "{{ created_files.files }}"</code>. C'est le mécanisme central pour chaîner des tâches qui dépendent du résultat des précédentes.</div>
+    </div>
+  </div>
+
+  <!-- Q12 — correct : c -->
+  <div class="question-card" id="q12">
+    <div class="question-header">
+      <span class="q-num">Q12</span>
+      <div><div class="q-text">Quelle est la différence entre les modules <code>copy</code> et <code>template</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q12" id="q12a" value="a"><label for="q12a">a) <code>copy</code> est réservé aux fichiers binaires, <code>template</code> aux fichiers texte</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12b" value="b"><label for="q12b">b) <code>copy</code> fonctionne uniquement en local, <code>template</code> uniquement sur des hôtes distants</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12c" value="c"><label for="q12c">c) <code>copy</code> copie un fichier ou contenu statique tel quel ; <code>template</code> rend un fichier <code>.j2</code> avec interpolation de variables Jinja2</label></div>
+      <div class="option"><input type="radio" name="q12" id="q12d" value="d"><label for="q12d">d) <code>copy</code> crée des dossiers, <code>template</code> crée des fichiers</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr12')">Voir la correction</button>
+    <div class="correction-zone" id="corr12">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">Dans <code>setup-system.yml</code>, <code>copy: content: "APP_NAME={{ app_name }}\n..."</code> écrit un contenu statique (l'interpolation se fait dans le playbook YAML lui-même, pas dans un fichier). Le module <code>template</code> lit un fichier <code>.j2</code> depuis le contrôleur, le rend avec Jinja2 (boucles, conditions, filtres…) puis l'envoie sur l'hôte. Voir <code>deploy.yml</code> qui utilise <code>template: src: nginx.conf.j2</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q13 — correct : b -->
+  <div class="question-card" id="q13">
+    <div class="question-header">
+      <span class="q-num">Q13</span>
+      <div><div class="q-text">Dans un rôle Ansible, quel est le rôle du dossier <code>defaults/</code> (ex. : <code>roles/app-config/defaults/main.yml</code>) ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q13" id="q13a" value="a"><label for="q13a">a) Définir les tâches par défaut du rôle, exécutées si aucune autre tâche n'est déclarée</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13b" value="b"><label for="q13b">b) Déclarer les variables avec la <strong>priorité la plus basse</strong>, facilement surchargeables depuis le playbook appelant</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13c" value="c"><label for="q13c">c) Stocker les templates Jinja2 utilisés par défaut dans le rôle</label></div>
+      <div class="option"><input type="radio" name="q13" id="q13d" value="d"><label for="q13d">d) Lister les dépendances du rôle vis-à-vis d'autres rôles Ansible Galaxy</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr13')">Voir la correction</button>
+    <div class="correction-zone" id="corr13">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication"><code>defaults/main.yml</code> contient les valeurs par défaut des variables du rôle. C'est la priorité la plus basse dans la hiérarchie des variables Ansible : n'importe quelle variable déclarée dans le playbook appelant, dans l'inventaire ou dans <code>vars/</code> prend le dessus. Dans <code>app-config/defaults/main.yml</code> : <code>app_port: 8080</code>, <code>app_environment: "development"</code>…, tous surchargeables depuis <code>use-role.yml</code>.</div>
+      <div class="wrong-note">Les dépendances de rôles (d) sont dans <code>meta/main.yml</code>, comme on le voit dans <code>roles/app-config/meta/main.yml</code> avec <code>dependencies: []</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q14 — correct : a + c (multi) -->
+  <div class="question-card" id="q14">
+    <div class="question-header">
+      <span class="q-num">Q14</span>
+      <div>
+        <div class="q-text">Quelles affirmations sur les <strong>rôles Ansible</strong> sont vraies ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q14" id="q14a" value="a"><label for="q14a">a) Un rôle est une façon de structurer et réutiliser un ensemble cohérent de tâches, templates, handlers et variables</label></div>
+      <div class="option"><input type="checkbox" name="q14" id="q14b" value="b"><label for="q14b">b) Un rôle remplace complètement le playbook — celui-ci n'est plus nécessaire quand on utilise des rôles</label></div>
+      <div class="option"><input type="checkbox" name="q14" id="q14c" value="c"><label for="q14c">c) Un rôle est appelé depuis un playbook via la directive <code>roles:</code></label></div>
+      <div class="option"><input type="checkbox" name="q14" id="q14d" value="d"><label for="q14d">d) Les rôles ne peuvent pas contenir de handlers, uniquement des tâches</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr14')">Voir la correction</button>
+    <div class="correction-zone" id="corr14">
+      <div class="answer-label">✅ Bonnes réponses : a) et c)</div>
+      <div class="explication">
+        <strong>a) Vrai</strong> — Un rôle regroupe dans une arborescence standardisée : <code>tasks/</code>, <code>handlers/</code>, <code>templates/</code>, <code>defaults/</code>, <code>meta/</code>… C'est le mécanisme de réutilisabilité principal d'Ansible.<br>
+        <strong>c) Vrai</strong> — Dans <code>use-role.yml</code> : <code>roles: - role: app-config vars: ...</code>. Le playbook reste nécessaire pour cibler les hôtes et passer les variables.<br>
+        <strong>b) Faux</strong> — Le playbook reste indispensable : c'est lui qui définit <code>hosts:</code> et appelle le rôle.<br>
+        <strong>d) Faux</strong> — Les rôles peuvent (et doivent) avoir des handlers. Le rôle <code>app-config</code> en a un : "Recharger configuration".
+      </div>
+    </div>
+  </div>
+
+  <!-- Q15 — correct : d -->
+  <div class="question-card" id="q15">
+    <div class="question-header">
+      <span class="q-num">Q15</span>
+      <div><div class="q-text">Que fait le filtre Jinja2 <code>| default('valeur')</code> dans un template Ansible comme <code>{{ app_name | default('MyApp') }}</code> ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q15" id="q15a" value="a"><label for="q15a">a) Il convertit la variable en un type "default" spécial</label></div>
+      <div class="option"><input type="radio" name="q15" id="q15b" value="b"><label for="q15b">b) Il supprime la variable si elle est vide et déclenche une erreur</label></div>
+      <div class="option"><input type="radio" name="q15" id="q15c" value="c"><label for="q15c">c) Il force la variable à prendre une valeur fixe, ignorant la valeur passée depuis le playbook</label></div>
+      <div class="option"><input type="radio" name="q15" id="q15d" value="d"><label for="q15d">d) Il retourne la valeur de repli indiquée si la variable est indéfinie ou vide, sans déclencher d'erreur</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr15')">Voir la correction</button>
+    <div class="correction-zone" id="corr15">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication">Le filtre <code>| default('valeur')</code> est un garde-fou : si la variable n'est pas définie, Jinja2 retourne la valeur de repli au lieu de lever une erreur <code>undefined</code>. C'est très utilisé dans <code>app-config.json.j2</code> : <code>{{ app_name | default('MyApp') }}</code>, <code>{{ server_port | default(8080) }}</code>. Si la variable est définie, sa valeur réelle est utilisée normalement.</div>
+    </div>
+  </div>
+
+  <!-- Q16 — correct : b -->
+  <div class="question-card" id="q16">
+    <div class="question-header">
+      <span class="q-num">Q16</span>
+      <div><div class="q-text">Dans le template <code>nginx.conf.j2</code>, le bloc <code>{% if deploy_environment == 'production' %} ... {% endif %}</code> sert à :</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q16" id="q16a" value="a"><label for="q16a">a) Définir une variable conditionnelle dans le template</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16b" value="b"><label for="q16b">b) Inclure un bloc de texte dans le fichier généré uniquement si la condition est vraie</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16c" value="c"><label for="q16c">c) Boucler sur une liste de valeurs pour générer plusieurs lignes</label></div>
+      <div class="option"><input type="radio" name="q16" id="q16d" value="d"><label for="q16d">d) Appeler un autre template Jinja2 de façon conditionnelle</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr16')">Voir la correction</button>
+    <div class="correction-zone" id="corr16">
+      <div class="answer-label">✅ Bonne réponse : b)</div>
+      <div class="explication">Dans Jinja2, <code>{% if condition %} ... {% endif %}</code> est une structure conditionnelle : le bloc de texte entre les balises n'est rendu dans le fichier final que si la condition est vraie. Dans <code>nginx.conf.j2</code>, les directives <code>access_log</code> et <code>error_log</code> n'apparaissent que si <code>deploy_environment == 'production'</code>. Cela permet un seul template pour plusieurs environnements.</div>
+      <div class="wrong-note">Pour boucler (c), Jinja2 utilise <code>{% for item in liste %} ... {% endfor %}</code>, comme dans <code>app-config.json.j2</code> pour la liste des features.</div>
+    </div>
+  </div>
+
+  <!-- Q17 — correct : c -->
+  <div class="question-card" id="q17">
+    <div class="question-header">
+      <span class="q-num">Q17</span>
+      <div><div class="q-text">Quelle commande permet de lancer le playbook <code>deploy.yml</code> avec l'inventaire généré par Terraform ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q17" id="q17a" value="a"><label for="q17a">a) <code>ansible deploy.yml -inventory inventories/generated.ini</code></label></div>
+      <div class="option"><input type="radio" name="q17" id="q17b" value="b"><label for="q17b">b) <code>ansible-run --inv inventories/generated.ini playbooks/deploy.yml</code></label></div>
+      <div class="option"><input type="radio" name="q17" id="q17c" value="c"><label for="q17c">c) <code>ansible-playbook -i inventories/generated.ini playbooks/deploy.yml</code></label></div>
+      <div class="option"><input type="radio" name="q17" id="q17d" value="d"><label for="q17d">d) <code>ansible-exec playbooks/deploy.yml --inventory=generated.ini</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr17')">Voir la correction</button>
+    <div class="correction-zone" id="corr17">
+      <div class="answer-label">✅ Bonne réponse : c)</div>
+      <div class="explication">La commande correcte est <code>ansible-playbook</code> (avec tiret, pas d'espace). Le flag <code>-i</code> (ou <code>--inventory</code>) spécifie l'inventaire à utiliser. Cette commande est documentée en commentaire en tête de <code>deploy.yml</code> : <code># Lancement : ansible-playbook -i inventories/generated.ini playbooks/deploy.yml</code>. Sans <code>-i</code>, Ansible utilise l'inventaire par défaut défini dans <code>ansible.cfg</code>.</div>
+    </div>
+  </div>
+
+  <!-- Q18 — correct : a -->
+  <div class="question-card" id="q18">
+    <div class="question-header">
+      <span class="q-num">Q18</span>
+      <div><div class="q-text">Dans <code>app-config.json.j2</code>, la boucle <code>{% for feature in features %} ... {% endfor %}</code> produit :</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q18" id="q18a" value="a"><label for="q18a">a) Une itération sur chaque élément de la liste <code>features</code>, générant une ligne par élément</label></div>
+      <div class="option"><input type="radio" name="q18" id="q18b" value="b"><label for="q18b">b) Un appel récursif sur la variable <code>features</code> jusqu'à ce qu'elle soit vide</label></div>
+      <div class="option"><input type="radio" name="q18" id="q18c" value="c"><label for="q18c">c) Une condition sur la liste : si <code>features</code> n'est pas vide, le bloc est rendu une seule fois</label></div>
+      <div class="option"><input type="radio" name="q18" id="q18d" value="d"><label for="q18d">d) Un import de chaque feature depuis un fichier externe du même nom</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr18')">Voir la correction</button>
+    <div class="correction-zone" id="corr18">
+      <div class="answer-label">✅ Bonne réponse : a)</div>
+      <div class="explication">La boucle Jinja2 <code>{% for feature in features %}</code> itère sur chaque élément de la liste. Dans le template, elle génère une ligne JSON <code>"feature"</code> par élément, avec <code>{{ "," if not loop.last else "" }}</code> pour gérer la virgule de séparation JSON (sauf sur le dernier élément). Pour <code>features: ["user_auth", "api_v2", "caching"]</code>, elle produit 3 lignes dans le tableau JSON.</div>
+    </div>
+  </div>
+
+  <!-- Q19 — correct : d -->
+  <div class="question-card" id="q19">
+    <div class="question-header">
+      <span class="q-num">Q19</span>
+      <div><div class="q-text">Quelle variable Ansible magique contient le nom de l'hôte tel que défini dans l'inventaire ?</div></div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="radio" name="q19" id="q19a" value="a"><label for="q19a">a) <code>ansible_host</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19b" value="b"><label for="q19b">b) <code>host_name</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19c" value="c"><label for="q19c">c) <code>ansible_nodename</code></label></div>
+      <div class="option"><input type="radio" name="q19" id="q19d" value="d"><label for="q19d">d) <code>inventory_hostname</code></label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr19')">Voir la correction</button>
+    <div class="correction-zone" id="corr19">
+      <div class="answer-label">✅ Bonne réponse : d)</div>
+      <div class="explication"><code>inventory_hostname</code> est une variable magique Ansible qui contient exactement le nom de l'hôte tel qu'écrit dans l'inventaire. On la voit dans <code>deploy.yml</code> : <code>"Serveur : {{ inventory_hostname }}"</code> et dans <code>nginx.conf.j2</code> : <code>server_name {{ inventory_hostname }}</code>. Elle vaut <code>192.168.1.10</code> si c'est ce qui est écrit dans <code>generated.ini</code>.</div>
+      <div class="wrong-note"><code>ansible_host</code> (a) est l'IP de connexion réelle (peut différer si on utilise un alias). <code>ansible_nodename</code> (c) est le hostname système de la machine cible.</div>
+    </div>
+  </div>
+
+  <!-- Q20 — correct : a + b + c (multi) -->
+  <div class="question-card" id="q20">
+    <div class="question-header">
+      <span class="q-num">Q20</span>
+      <div>
+        <div class="q-text">Dans la chaîne Terraform → Ansible, quels sont les avantages de générer <code>generated.ini</code> depuis Terraform et de l'utiliser comme inventaire pour Ansible ?</div>
+        <div class="q-note">⚠️ Plusieurs réponses attendues</div>
+      </div>
+    </div>
+    <div class="options">
+      <div class="option"><input type="checkbox" name="q20" id="q20a" value="a"><label for="q20a">a) L'inventaire reflète exactement les hôtes provisionnés, sans saisie manuelle des IPs</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20b" value="b"><label for="q20b">b) Les variables d'environnement (<code>deploy_environment</code>) peuvent être transmises de Terraform vers Ansible via l'inventaire</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20c" value="c"><label for="q20c">c) Si Terraform recrée des ressources avec de nouvelles IPs et relance <code>apply</code>, l'inventaire est automatiquement mis à jour</label></div>
+      <div class="option"><input type="checkbox" name="q20" id="q20d" value="d"><label for="q20d">d) Ansible peut modifier le <code>tfstate</code> de Terraform pour enrichir les données d'infrastructure</label></div>
+    </div>
+    <button class="btn-show" onclick="toggleCorrection('corr20')">Voir la correction</button>
+    <div class="correction-zone" id="corr20">
+      <div class="answer-label">✅ Bonnes réponses : a), b) et c)</div>
+      <div class="explication">
+        <strong>a) Vrai</strong> — Terraform écrit directement les IPs qu'il a attribuées ; aucune saisie manuelle ne peut se tromper.<br>
+        <strong>b) Vrai</strong> — Dans <code>generated.ini.example</code> : <code>192.168.1.10 ansible_connection=local deploy_environment=development</code>. La variable <code>deploy_environment</code> vient de Terraform et est disponible dans Ansible via <code>{{ deploy_environment }}</code>.<br>
+        <strong>c) Vrai</strong> — C'est la force du fil rouge pédagogique du projet : une seule source de vérité, une chaîne automatisée de bout en bout.<br>
+        <strong>d) Faux</strong> — Ansible ne modifie jamais le <code>tfstate</code>. La communication entre les deux outils est unidirectionnelle dans ce projet : Terraform → inventaire → Ansible.
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-top" style="margin-top:2rem">
+    <button class="btn btn-primary" onclick="showAll()">📋 Afficher toutes les corrections</button>
+    <button class="btn btn-success" onclick="calcScore()">✅ Calculer mon score</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+  </div>
+
+  <footer>
+    QCM généré le 28 mai 2026 — Formation 3IAC1 — Ansible &amp; IaC<br>
+    Sources : playbooks deploy/setup-system/generate-config/use-role, rôle app-config, templates Jinja2, ansible.cfg, inventaires du projet lab-starter
+  </footer>
+</div>
+
+<script>
+  const answers = {
+    q1:  ['c'],
+    q2:  ['d'],
+    q3:  ['a'],
+    q4:  ['b'],
+    q5:  ['c'],
+    q6:  ['d'],
+    q7:  ['a'],
+    q8:  ['b','d'],
+    q9:  ['c'],
+    q10: ['d'],
+    q11: ['a'],
+    q12: ['c'],
+    q13: ['b'],
+    q14: ['a','c'],
+    q15: ['d'],
+    q16: ['b'],
+    q17: ['c'],
+    q18: ['a'],
+    q19: ['d'],
+    q20: ['a','b','c']
+  };
+
+  function toggleCorrection(id) {
+    document.getElementById(id).classList.toggle('visible');
+  }
+
+  function showAll() {
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.add('visible'));
+  }
+
+  function calcScore() {
+    let score = 0;
+    for (let [q, correct] of Object.entries(answers)) {
+      const card = document.getElementById(q);
+      const isMulti = correct.length > 1;
+      let selected;
+      if (isMulti) {
+        selected = [...card.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+      } else {
+        const radio = card.querySelector('input[type=radio]:checked');
+        selected = radio ? [radio.value] : [];
+      }
+      const isCorrect = correct.length === selected.length && correct.every(v => selected.includes(v));
+      card.querySelectorAll('.option').forEach(opt => {
+        const inp = opt.querySelector('input');
+        opt.classList.remove('correct', 'incorrect');
+        if (correct.includes(inp.value)) opt.classList.add('correct');
+        else if (selected.includes(inp.value)) opt.classList.add('incorrect');
+      });
+      if (isCorrect) score++;
+    }
+    const pct = Math.round(score / 20 * 100);
+    document.getElementById('scoreVal').textContent = `${score} / 20 (${pct}%)`;
+    let msg = pct >= 80 ? '🎉 Excellent ! Vous maîtrisez bien Ansible.'
+            : pct >= 60 ? '👍 Bon niveau ! Quelques points à revoir.'
+            : '📖 Continuez à réviser, les bases méritent d\'être consolidées.';
+    document.getElementById('scoreMsg').textContent = msg;
+    const zone = document.getElementById('scoreZone');
+    zone.style.display = 'block';
+    zone.scrollIntoView({ behavior: 'smooth' });
+    showAll();
+  }
+
+  function resetAll() {
+    document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(i => i.checked = false);
+    document.querySelectorAll('.option').forEach(o => o.classList.remove('correct','incorrect'));
+    document.querySelectorAll('.correction-zone').forEach(el => el.classList.remove('visible'));
+    document.getElementById('scoreZone').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
