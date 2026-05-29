@@ -448,7 +448,7 @@
       </div>
     </div>
     <div class="tip" style="margin-top:.8rem">
-      <strong>💡 Sudo :</strong> L'utilisateur <code>etudiant</code> dispose de sudo sans mot de passe sur l'OVA — les commandes Ansible avec <code>become: yes</code> n'ont pas besoin du flag <code>--ask-become-pass</code>.
+      <strong>💡 Sudo :</strong> Le mot de passe sudo de l'utilisateur <code>etudiant</code> est <strong><code>3iac1p</code></strong> (identique au mot de passe de session). Les commandes Ansible qui utilisent <code>become: yes</code> doivent inclure le flag <code>-K</code> (<code>--ask-become-pass</code>) — Ansible demandera alors ce mot de passe au lancement.
     </div>
   </div>
 
@@ -579,10 +579,13 @@ ansible --version</div>
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Définir le mot de passe DB via variable d'environnement
-            <span class="cmd">export TF_VAR_db_password="MonMotDePasseSecret42"</span>
+          <div class="check-label">Définir les variables d'environnement pour le TP
+            <span class="cmd">export TF_VAR_db_password="MonMotDePasseSecret42"
+export ANSIBLE_BECOME_PASS="3iac1p"</span>
             <div style="margin-top:0.4rem; font-size:0.83rem; color:#94a3b8;">
-              ⚠️ Cette variable n'existe que dans le terminal courant. Si tu ouvres un nouveau terminal entre les étapes, il faudra la ré-exporter. Pour éviter ça, tu peux l'ajouter à la fin de <code>~/.bashrc</code> : <code>echo 'export TF_VAR_db_password="MonMotDePasseSecret42"' >> ~/.bashrc</code>
+              <code>TF_VAR_db_password</code> est lu par Terraform pour le mot de passe PostgreSQL.<br>
+              <code>ANSIBLE_BECOME_PASS</code> est lu par Ansible pour les tâches <code>become: yes</code> — évite d'avoir à entrer le mot de passe sudo à chaque commande, sans le stocker dans un fichier commité.<br>
+              ⚠️ Ces variables n'existent que dans le terminal courant. Pour les rendre permanentes : <code>echo 'export TF_VAR_db_password="MonMotDePasseSecret42"' >> ~/.bashrc && echo 'export ANSIBLE_BECOME_PASS="3iac1p"' >> ~/.bashrc</code>
             </div>
           </div>
         </div>
@@ -625,7 +628,8 @@ ansible --version</div>
 
       <p class="code-label">Lancer le playbook</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/ansible
-ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -v</div>
+ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -v -K
+# -K demande le mot de passe sudo (become: yes dans le playbook) — entrer : 3iac1p</div>
 
       <div class="verif-section">
         <h4>✔ Vérifications après l'étape 1</h4>
@@ -639,11 +643,12 @@ ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -v</di
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">Activer le groupe docker dans la session courante
-            <span class="cmd">newgrp docker</span>
+            <span class="cmd">sudo usermod -aG docker etudiant</span>
+            <span class="cmd">exec su - etudiant</span>
             <div style="margin-top:0.4rem; font-size:0.83rem; color:#94a3b8;">
-              Le playbook vient d'ajouter ton utilisateur au groupe <code>docker</code>, mais ce changement n'est actif
-              que dans une nouvelle session. <code>newgrp docker</code> recharge le groupe sans devoir
-              se déconnecter. À faire <strong>avant</strong> de tester <code>docker ps</code>.
+              <code>usermod -aG docker etudiant</code> ajoute l'utilisateur au groupe docker (nécessite sudo).<br>
+              <code>exec su - etudiant</code> remplace le shell courant par une nouvelle session de login — le groupe docker est actif immédiatement, sans fermer la fenêtre VirtualBox.<br>
+              ⚠️ Après <code>exec su - etudiant</code>, pense à ré-exporter les variables d'environnement si tu ne les as pas ajoutées à <code>~/.bashrc</code>.
             </div>
           </div>
         </div>
@@ -657,7 +662,7 @@ ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -v</di
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">Le playbook est idempotent (relancer sans erreur ni changement)
-            <span class="cmd">ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml</span>
+            <span class="cmd">ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -K</span>
             <div class="expected-output">ok=5   changed=0   unreachable=0   failed=0</div>
           </div>
         </div>
@@ -804,9 +809,15 @@ POSTGRES_PASSWORD ← var.db_password  (variable sensitive !)</div>
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Le volume pg_data est monté
-            <span class="cmd">docker inspect postgres | grep -A3 Mounts</span>
-            <div class="expected-output">"Destination": "/var/lib/postgresql/data"</div>
+          <div class="check-label">Le volume pg_data est monté sur le bon chemin
+            <span class="cmd">docker inspect postgres --format '{{range .Mounts}}{{.Destination}}{{end}}'</span>
+            <div class="expected-output">/var/lib/postgresql/data</div>
+            <div style="margin-top:0.4rem; font-size:0.83rem; color:#94a3b8;">
+              <code>--format</code> applique un template Go sur la sortie JSON de <code>docker inspect</code>.<br>
+              <code>{{range .Mounts}}</code> itère sur la liste des montages du conteneur.<br>
+              <code>{{.Destination}}</code> extrait uniquement le chemin de montage dans le conteneur.<br>
+              C'est plus fiable qu'un <code>grep</code> avec contexte limité, et ça fonctionne même si l'ordre des champs JSON change.
+            </div>
           </div>
         </div>
         <div class="verif-item">
@@ -876,8 +887,30 @@ ansible-vault encrypt_string 'MonMotDePasseSecret42' \
         <strong>📋 Nginx dans Docker, pas sur l'hôte :</strong> Le module Ansible <code>template</code> écrit sur le système de fichiers de la machine où Ansible s'exécute (ici l'OVA). Mais nginx tourne dans un <em>conteneur Docker</em> dont le système de fichiers est isolé. Le playbook génère donc la config dans <code>/tmp/</code> sur l'hôte, puis utilise <code>docker cp</code> pour la transférer dans le conteneur.
       </div>
 
+      <div class="warning">
+        <strong>⚠️ Répertoire de travail obligatoire :</strong> Ansible charge <code>ansible.cfg</code> depuis le répertoire courant. Ce fichier définit l'inventaire et le chemin des <code>group_vars/</code>. Si tu te trouves ailleurs, la variable <code>flask_upstream</code> (définie dans <code>group_vars/all.yml</code>) sera introuvable et le playbook échouera.
+      </div>
+
+      <p class="code-label">Se positionner dans le bon dossier</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd ~/tp-3tiers/ansible</div>
+
+      <p>Avant de déployer Nginx, vérifie que le conteneur Flask est bien démarré — c'est lui que Nginx va proxifier :</p>
+
+      <p class="code-label">Vérifier que Flask est en cours d'exécution</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>docker ps | grep flask_app</div>
+      <div class="expected-output" style="margin-bottom:1rem">flask_app   Up X seconds   python:3.11-slim   …
+# Si le conteneur n'apparaît pas, relance : terraform apply (depuis tp-3tiers/terraform/)</div>
+
+      <div class="tip">
+        <strong>💡 D'où vient <code>flask_upstream</code> ?</strong> La variable est définie dans <code>group_vars/all.yml</code> :
+        <span class="cmd">grep flask_upstream group_vars/all.yml</span>
+        <div class="expected-output">flask_upstream: "flask_app:5000"</div>
+        C'est le nom du conteneur Docker (<code>flask_app</code>) et son port interne (<code>5000</code>). Ansible l'injecte dans le template <code>nginx.conf.j2</code> via la directive <code>proxy_pass</code>.
+      </div>
+
       <p class="code-label">Déployer la configuration Nginx</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible-playbook playbooks/02-configure-nginx.yml -v</div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible-playbook playbooks/02-configure-nginx.yml -v
+# Pas de -K ici : ce playbook utilise become: no (docker cp ne nécessite pas sudo)</div>
 
       <div class="verif-section">
         <h4>✔ Vérifications après l'étape 4</h4>

@@ -26,5 +26,6 @@ flask_upstream: "flask_app:5000"
 # ── Docker ────────────────────────────────────────────────────────────────────
 docker_packages:
   - docker.io
-  - docker-compose-plugin
   - python3-docker
+  # docker-compose-plugin n'est pas dans les dépôts Ubuntu 22.04 par défaut
+  # et n'est pas utilisé dans ce TP (Terraform gère les conteneurs directement)
