@@ -14,10 +14,12 @@
       apt:
         name:
           - docker.io
-          - docker-compose-plugin
           - python3-docker
         state: present
         update_cache: yes
+      # Note : docker-compose-plugin n'est pas dans les dépôts Ubuntu 22.04 par défaut.
+      # Ce TP utilise Terraform (provider kreuzwerker/docker) pour gérer les conteneurs —
+      # docker-compose n'est pas nécessaire.
 
     - name: "Démarrer et activer le service Docker"
       service:
