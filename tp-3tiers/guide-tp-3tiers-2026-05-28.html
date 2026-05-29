@@ -781,8 +781,9 @@ terraform apply</div>
 POSTGRES_USER     ← var.db_user
 POSTGRES_PASSWORD ← var.db_password  (variable sensitive !)</div>
 
-      <p class="code-label">Appliquer les modifications</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>terraform apply</div>
+      <div class="prereq">
+        <strong>📋 Aucune commande à lancer :</strong> Le conteneur PostgreSQL a déjà été déployé par le <code>terraform apply</code> de l'étape 2. Cette étape consiste à lire le code et comprendre les choix de sécurité — pas à modifier quoi que ce soit.
+      </div>
 
       <div class="verif-section">
         <h4>✔ Vérifications après l'étape 3</h4>
@@ -818,12 +819,6 @@ POSTGRES_PASSWORD ← var.db_password  (variable sensitive !)</div>
               <code>{{.Destination}}</code> extrait uniquement le chemin de montage dans le conteneur.<br>
               C'est plus fiable qu'un <code>grep</code> avec contexte limité, et ça fonctionne même si l'ordre des champs JSON change.
             </div>
-          </div>
-        </div>
-        <div class="verif-item">
-          <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">PostgreSQL accepte les connexions depuis Flask (via db_net)
-            <span class="cmd">docker exec flask_app python3 -c "import psycopg2; print('OK')" 2>/dev/null || echo "Flask pas encore configuré"</span>
           </div>
         </div>
       </div>
@@ -894,12 +889,9 @@ ansible-vault encrypt_string 'MonMotDePasseSecret42' \
       <p class="code-label">Se positionner dans le bon dossier</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd ~/tp-3tiers/ansible</div>
 
-      <p>Avant de déployer Nginx, vérifie que le conteneur Flask est bien démarré — c'est lui que Nginx va proxifier :</p>
-
-      <p class="code-label">Vérifier que Flask est en cours d'exécution</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>docker ps | grep flask_app</div>
-      <div class="expected-output" style="margin-bottom:1rem">flask_app   Up X seconds   python:3.11-slim   …
-# Si le conteneur n'apparaît pas, relance : terraform apply (depuis tp-3tiers/terraform/)</div>
+      <div class="prereq">
+        <strong>📋 Flask ne tourne pas dans ce TP :</strong> L'image <code>python:3.11-slim</code> est une image de base Python sans application — le conteneur démarre et s'arrête immédiatement. Nginx va donc répondre <strong>502</strong> (Bad Gateway), ce qui est le comportement attendu. L'objectif ici est de vérifier que Nginx est correctement configuré, pas que l'application répond.
+      </div>
 
       <div class="tip">
         <strong>💡 D'où vient <code>flask_upstream</code> ?</strong> La variable est définie dans <code>group_vars/all.yml</code> :
@@ -923,9 +915,9 @@ ansible-vault encrypt_string 'MonMotDePasseSecret42' \
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Nginx répond (200 ou 502 selon le backend, peu importe ici)
+          <div class="check-label">Nginx répond HTTP 502 (Flask absent — comportement attendu)
             <span class="cmd">curl -s -o /dev/null -w "%{http_code}" http://localhost</span>
-            <div class="expected-output">200 ou 502 — l'important est qu'une réponse HTTP est reçue (pas de "Connection refused")</div>
+            <div class="expected-output">502 — Nginx fonctionne et proxifie vers flask_app:5000, mais Flask ne tourne pas. "Connection refused" serait un vrai problème.</div>
           </div>
         </div>
         <div class="verif-item">
@@ -972,7 +964,7 @@ ansible-vault encrypt_string 'MonMotDePasseSecret42' \
     </div>
     <div class="step-body">
       <div class="objectif">
-        <strong>Objectif :</strong> Compléter le fichier <code>tp-3tiers/test/infrastructure_test.go</code> pour tester automatiquement que : <code>db_net</code> est <code>internal=true</code>, Nginx répond HTTP 200, et PostgreSQL n'expose aucun port.
+        <strong>Objectif :</strong> Compléter le fichier <code>tp-3tiers/test/infrastructure_test.go</code> pour tester automatiquement que : <code>db_net</code> est <code>internal=true</code>, Nginx répond HTTP (502 attendu — Flask absent), et PostgreSQL n'expose aucun port.
       </div>
 
       <div class="prereq">
@@ -990,7 +982,7 @@ defer terraform.Destroy(t, opts)   // 1. enregistrer le cleanup (s'exécute en d
 terraform.InitAndApply(t, opts)    // 2. déployer l'infrastructure
 
 // Test 1 : db_net.Internal == true  (vérification réseau Docker)
-// Test 2 : HttpGetWithRetry → nginx répond HTTP 200
+// Test 2 : nginx_responds_http → nginx répond HTTP (502 attendu, Flask absent)
 // Test 3 : postgres ne doit exposer aucun port (bonus)</div>
 
       <div class="prereq">
@@ -1027,9 +1019,9 @@ TF_VAR_db_password="MonMotDePasseSecret42" \
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Test nginx_responds_200 passe
-            <span class="cmd">go test -v -run TestInfrastructure3Tiers/nginx_responds_200 ./...</span>
-            <div class="expected-output">--- PASS: TestInfrastructure3Tiers/nginx_responds_200</div>
+          <div class="check-label">Test nginx_responds_http passe
+            <span class="cmd">go test -v -run TestInfrastructure3Tiers/nginx_responds_http ./...</span>
+            <div class="expected-output">--- PASS: TestInfrastructure3Tiers/nginx_responds_http</div>
           </div>
         </div>
         <div class="verif-item">
