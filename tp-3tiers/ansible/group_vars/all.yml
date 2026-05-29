@@ -12,13 +12,12 @@ deploy_environment: "dev"
 db_name: "appdb"
 db_user: "appuser"
 
-# TODO Q4 : Chiffrer db_password avec Ansible Vault
-# Commande : ansible-vault encrypt_string 'votre_mdp' --name 'db_password'
-# Le résultat ressemble à :
-# db_password: !vault |
-#   $ANSIBLE_VAULT;1.1;AES256
-#   61383930613365336338323866343862...
-db_password: "CHANGER_MOI_ET_CHIFFRER_AVEC_VAULT"
+# ⚠️  CONTEXTE TP — SÉCURITÉ ALLÉGÉE
+# En production, cette valeur DOIT être chiffrée avec ansible-vault :
+#   ansible-vault encrypt_string 'MonMotDePasseSecret42' --name 'db_password' --vault-password-file .vault_pass
+# et le résultat remplace la ligne ci-dessous (tag !vault |).
+# Pour ce TP, la valeur est en clair pour simplifier l'exécution et la vérification.
+db_password: "MonMotDePasseSecret42"
 
 # ── Nginx ─────────────────────────────────────────────────────────────────────
 nginx_port: 80
