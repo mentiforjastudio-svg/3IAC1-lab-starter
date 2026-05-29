@@ -416,6 +416,7 @@
   <a href="#recap">Récapitulatif</a>
   <a href="#annexe-outils">Annexe · Vérification outils</a>
   <a href="#annexe-hors-ova">Annexe · Hors OVA</a>
+  <a href="#annexe-git-update">Annexe · Mise à jour OVA</a>
 </nav>
 
 <main>
@@ -1169,6 +1170,141 @@ git clone &lt;url-du-repo&gt; ~/3iac1-lab-starter</div>
 # Terraform + Ansible : voir Annexe A
 # Docker : sudo apt install docker.io && sudo usermod -aG docker $USER
 # Go : voir Annexe A</div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ ANNEXE C — Mise à jour OVA ═══════════════════════ -->
+  <section class="step" id="annexe-git-update">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num" style="background:var(--muted);font-size:0.75rem">C</div>
+      <h2>Annexe — Mettre à jour l'OVA avec le dépôt Git (nouveau TP)</h2>
+      <span class="duration">5 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body collapsed">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem">
+        Quand un nouveau TP est publié ou que le formateur pousse des corrections, l'OVA doit être synchronisée avec le dépôt Git distant. Cette procédure explique comment récupérer les nouveaux fichiers sans perdre ton travail.
+      </p>
+
+      <!-- Cas 1 — Git pull simple -->
+      <p style="font-weight:700;color:#60a5fa;margin:0 0 0.6rem">📥 Cas 1 — Tu n'as pas modifié les fichiers scaffold (cas habituel)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">
+        Si tu as seulement complété les fichiers dans <code>tp-3tiers/</code> ou créé tes propres fichiers (<code>.tfvars</code>, inventaires générés…), un simple <code>git pull</code> suffit — ces fichiers sont ignorés par <code>.gitignore</code> et ne seront pas touchés.
+      </p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Depuis la racine du dépôt
+cd ~/3iac1-lab-starter
+
+# Vérifier l'état avant toute chose
+git status
+
+# Récupérer les mises à jour
+git pull origin main
+
+# Vérifier les nouveaux fichiers reçus
+git log --oneline -5
+ls tp-3tiers/        # le nouveau dossier doit apparaître</div>
+      <div class="tip">
+        <strong>💡 Fichiers protégés par .gitignore :</strong> <code>terraform.tfvars</code>, <code>.terraform/</code>, <code>inventories/generated.ini</code>, <code>.vault_pass</code> ne sont jamais trackés. Un <code>git pull</code> ne les modifie <strong>jamais</strong>.
+      </div>
+
+      <!-- Cas 2 — Conflits sur fichiers scaffold -->
+      <p style="font-weight:700;color:#f59e0b;margin:1.5rem 0 0.6rem">⚠️ Cas 2 — Tu as modifié un fichier scaffold (ex : <code>main.tf</code>, un playbook…)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">
+        Si tu as édité des fichiers trackés par Git (les fichiers scaffold fournis), <code>git pull</code> risque de te signaler un conflit. Deux options :
+      </p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># ── Option A : mettre ton travail de côté temporairement (stash) ──
+git stash                    # sauvegarde tes modifications locales
+git pull origin main         # récupère les mises à jour
+git stash pop                # réapplique tes modifications par-dessus
+# Si conflit : git ouvre un marqueur <<<<<<< — résoudre manuellement, puis :
+# git add &lt;fichier&gt; &amp;&amp; git stash drop
+
+# ── Option B : garder ta version, ignorer les changements distants ──
+# (uniquement si tu sais ce que tu fais)
+git pull origin main --strategy-option=ours</div>
+
+      <!-- Cas 3 — Réinitialiser depuis zéro -->
+      <p style="font-weight:700;color:#ef4444;margin:1.5rem 0 0.6rem">🔄 Cas 3 — Repartir proprement depuis la version du formateur</p>
+      <div class="warning-box">
+        <strong>⚠ Destructif :</strong> Cette opération écrase toutes tes modifications locales sur les fichiers trackés. Tes <code>.tfvars</code> et fichiers ignorés par <code>.gitignore</code> sont préservés.
+      </div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Sauvegarder d'abord ton travail si besoin :
+cp tp-3tiers/terraform/main.tf ~/mon-main-tf.bak
+
+# Réinitialiser tous les fichiers trackés à la version distante :
+git fetch origin
+git reset --hard origin/main
+
+# Vérifier :
+git status          # doit afficher "nothing to commit, working tree clean"
+ls tp-3tiers/       # nouveau TP visible</div>
+
+      <!-- Vérification finale -->
+      <p style="font-weight:700;color:#10b981;margin:1.5rem 0 0.6rem">✅ Vérifier la mise à jour</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># Confirmer que le nouveau TP est bien présent
+ls -la tp-3tiers/
+ls -la tp-3tiers/terraform/
+ls -la tp-3tiers/ansible/
+ls -la tp-3tiers/test/
+
+# Voir les derniers commits reçus
+git log --oneline -8</div>
+      <div class="tip">
+        <strong>💡 Bonne pratique :</strong> Avant chaque séance, lance <code>git pull origin main</code> depuis <code>~/3iac1-lab-starter</code>. Si la commande affiche <em>"Already up to date"</em>, tu es à jour. Si elle liste des fichiers, lis le message du commit (<code>git log --oneline -1</code>) pour savoir ce qui a changé.
+      </div>
+
+      <!-- Persister dans l'OVA -->
+      <p style="font-weight:700;color:#a855f7;margin:1.5rem 0 0.6rem">💾 Persister les mises à jour dans l'OVA (pour les prochains démarrages ou duplications)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.8rem">
+        Un <code>git pull</code> ne modifie que le disque virtuel de la VM en cours d'exécution. Si tu éteins et relances la VM depuis l'OVA d'origine, ou si tu l'importes sur un autre PC, tu repars de la version initiale — sans les nouveaux TP. Pour conserver définitivement les mises à jour, tu as deux options selon ton hyperviseur.
+      </p>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:0.8rem 0 0.4rem">Option 1 — Créer un snapshot VirtualBox (recommandé)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Un snapshot "fige" l'état complet de la VM à un instant T. Tu peux revenir à cet état à tout moment, ou t'en servir comme point de départ pour une nouvelle session.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># 1. Depuis la VM, effectue le git pull (voir ci-dessus)
+# 2. Éteins proprement la VM :
+sudo poweroff
+
+# 3. Dans VirtualBox (hôte Windows/Mac/Linux) :
+#    → Sélectionne la VM dans la liste
+#    → Menu Machine → Instantanés (ou icône appareil photo)
+#    → Prendre un instantané
+#    → Nom suggéré : "après-pull-tp-3tiers-2026-05-28"
+#
+# 4. Pour revenir à cet état plus tard :
+#    → Clic droit sur l'instantané → Restaurer
+#
+# ✅ Tout redémarrage depuis cet instantané inclut les nouveaux fichiers.</div>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:1.2rem 0 0.4rem">Option 2 — Exporter une nouvelle OVA à partager</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Si tu veux partager la VM mise à jour avec un autre étudiant ou l'importer sur un autre PC, exporte-la en OVA depuis VirtualBox.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># 1. Depuis la VM, effectue le git pull et éteins la VM (sudo poweroff)
+#
+# 2. Dans VirtualBox :
+#    → Fichier → Exporter un appareil virtuel
+#    → Sélectionne ta VM → Suivant
+#    → Format : OVA  |  Fichier : ~/Bureau/3iac1-tp-3tiers-v2.ova
+#    → Exporter
+#
+# 3. Partager le fichier .ova ou l'importer sur l'autre PC :
+#    VirtualBox → Fichier → Importer un appareil virtuel → sélectionner le .ova</div>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:1.2rem 0 0.4rem">Option 3 — Script de démarrage automatique (avancé)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Pour ne plus jamais avoir à penser à <code>git pull</code>, configure la VM pour le faire automatiquement à chaque connexion SSH ou ouverture de terminal.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># Ajouter à la fin de ~/.bashrc (s'exécute à chaque ouverture de terminal) :
+echo '
+# Auto-sync dépôt 3IAC1 au démarrage
+if [ -d ~/3iac1-lab-starter/.git ]; then
+  echo "🔄 Synchronisation du dépôt 3iac1-lab-starter..."
+  git -C ~/3iac1-lab-starter pull --quiet origin main \
+    && echo "✅ Dépôt à jour." \
+    || echo "⚠️  Impossible de joindre le dépôt (mode hors-ligne ?)."
+fi
+' >> ~/.bashrc</div>
+      <div class="warning-box">
+        <strong>⚠ Prérequis :</strong> La VM doit avoir accès à Internet au démarrage. Si le réseau n'est pas disponible (mode hors-ligne, VPN, proxy d'entreprise), le pull échoue silencieusement mais ne bloque pas la session.
+      </div>
 
     </div>
   </section>
