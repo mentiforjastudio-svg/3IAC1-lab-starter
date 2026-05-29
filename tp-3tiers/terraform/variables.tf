@@ -48,7 +48,8 @@ variable "db_password" {
   description = "Mot de passe PostgreSQL — NE PAS mettre en dur, utiliser TF_VAR_db_password"
   type        = string
   sensitive   = true
-  # TODO : Déclarer cette variable comme sensitive=true et ne jamais lui donner de default
+  # Pas de valeur par défaut : Terraform refusera de s'exécuter sans cette variable.
+  # Passer la valeur via : export TF_VAR_db_password="votre_mdp"
 }
 
 # ── Environnement ─────────────────────────────────────────────────────────────

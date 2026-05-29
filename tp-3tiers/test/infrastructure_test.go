@@ -23,7 +23,7 @@ func TestInfrastructure3Tiers(t *testing.T) {
 
 	// ── Configuration Terraform ──────────────────────────────────────────────
 	opts := &terraform.Options{
-		TerraformDir: "../terraform/tp-3tiers",
+		TerraformDir: "../terraform",
 		Vars: map[string]interface{}{
 			"deploy_environment": "dev",
 			"db_name":            "testdb",
@@ -35,9 +35,8 @@ func TestInfrastructure3Tiers(t *testing.T) {
 		},
 	}
 
-	// TODO Q5 : Ajouter le defer pour détruire l'infra après le test
-	// Indice : terraform.Destroy() avec les mêmes opts
-	// IMPORTANT : defer doit être déclaré AVANT InitAndApply
+	// Cleanup automatique, même si le test panique ou échoue à mi-parcours
+	defer terraform.Destroy(t, opts)
 
 	// ── Déploiement ──────────────────────────────────────────────────────────
 	terraform.InitAndApply(t, opts)
@@ -48,18 +47,13 @@ func TestInfrastructure3Tiers(t *testing.T) {
 		assert.NoError(t, err, "Impossible de créer le client Docker")
 		defer cli.Close()
 
-		// TODO Q5 : Inspecter le réseau "db_net" et vérifier net.Internal == true
 		net, err := cli.NetworkInspect(context.Background(), "db_net", types.NetworkInspectOptions{})
 		assert.NoError(t, err, "Réseau db_net introuvable")
-
-		// TODO : compléter l'assertion
 		assert.True(t, net.Internal, "db_net doit avoir internal=true pour isoler la BDD")
 	})
 
 	// ── Test 2 : Nginx doit répondre HTTP 200 ────────────────────────────────
 	t.Run("nginx_responds_200", func(t *testing.T) {
-		// TODO Q5 : Utiliser http_helper.HttpGetWithRetry (pas time.Sleep !)
-		// Paramètres : url, tlsConfig, expectedStatus, expectedBody, retries, sleepBetween
 		http_helper.HttpGetWithRetry(
 			t,
 			"http://localhost",

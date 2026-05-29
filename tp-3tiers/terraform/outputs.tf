@@ -14,8 +14,7 @@ output "flask_container_name" {
 }
 
 output "db_network_internal" {
-  description = "Confirm que db_net est bien internal=true"
-  # TODO : que faut-il afficher ici pour vérifier que db_net est internal ?
+  description = "Confirme que db_net est bien internal=true (isolation de la BDD)"
   value       = docker_network.db_net.internal
 }
 

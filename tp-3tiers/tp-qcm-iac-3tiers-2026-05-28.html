@@ -689,10 +689,9 @@ docker exec -it flask_app python -c \
     <div class="test-box">
       <div class="label">▶ TESTEZ SUR VOTRE OVA :</div>
       <pre>cd tp-3tiers/ansible
-ansible-playbook -i inventories/hosts.ini playbooks/04-configure.yml --ask-vault-pass
-curl -I http://localhost          # vérifier les headers
-curl -s http://localhost/         # doit retourner la réponse Flask
-# Test rate limiting (doit bloquer après 10 req/s) :
+ansible-playbook -i inventories/hosts.ini playbooks/02-configure-nginx.yml --vault-password-file .vault_pass
+curl -I http://localhost          # vérifier les headers (200 ou 502, peu importe)
+# Test rate limiting (les 429 apparaissent après les premiers 200/502) :
 for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code}\n" http://localhost; done</pre>
     </div>
 

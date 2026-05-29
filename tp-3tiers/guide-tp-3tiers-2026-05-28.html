@@ -416,6 +416,7 @@
   <a href="#recap">Récapitulatif</a>
   <a href="#annexe-outils">Annexe · Vérification outils</a>
   <a href="#annexe-hors-ova">Annexe · Hors OVA</a>
+  <a href="#annexe-git-update">Annexe · Mise à jour OVA</a>
 </nav>
 
 <main>
@@ -432,6 +433,25 @@
   </div>
 
   <!-- Contexte & architecture -->
+  <!-- Credentials OVA -->
+  <div class="intro-card" style="border-left: 4px solid var(--warning);">
+    <h2>🔑 Accès à l'OVA</h2>
+    <p>Démarre la VM dans VirtualBox, puis connecte-toi avec les identifiants suivants :</p>
+    <div style="display:flex; gap:2rem; flex-wrap:wrap; margin-top:.8rem;">
+      <div style="background:var(--code-bg); border-radius:8px; padding:.8rem 1.2rem; font-family:monospace;">
+        <div style="color:var(--muted); font-size:.75rem; margin-bottom:.3rem">UTILISATEUR</div>
+        <div style="font-size:1.1rem; color:#fde68a;">etudiant</div>
+      </div>
+      <div style="background:var(--code-bg); border-radius:8px; padding:.8rem 1.2rem; font-family:monospace;">
+        <div style="color:var(--muted); font-size:.75rem; margin-bottom:.3rem">MOT DE PASSE</div>
+        <div style="font-size:1.1rem; color:#fde68a;">3iac1p</div>
+      </div>
+    </div>
+    <div class="tip" style="margin-top:.8rem">
+      <strong>💡 Sudo :</strong> L'utilisateur <code>etudiant</code> dispose de sudo sans mot de passe sur l'OVA — les commandes Ansible avec <code>become: yes</code> n'ont pas besoin du flag <code>--ask-become-pass</code>.
+    </div>
+  </div>
+
   <div class="intro-card" id="contexte">
     <h2>🏗️ Architecture déployée</h2>
     <p>Tu vas déployer une infrastructure 3-tiers containerisée, réaliste pour de la production. Chaque couche est isolée sur son propre réseau Docker.</p>
@@ -510,7 +530,16 @@
         <strong>📋 Sur l'OVA :</strong> Terraform et Ansible sont pré-installés. Docker sera installé à l'étape 1 via Ansible. Go (pour Terratest) sera installé à l'étape 5. → Voir <a href="#annexe-outils" style="color:#fde68a">Annexe : vérifier un outil</a> si besoin.
       </div>
 
-      <p class="code-label">Vérifier les outils pré-installés</p>
+      <p class="code-label">1. Récupérer les dernières sources du dépôt (nouveau TP inclus)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd ~/3iac1-lab-starter
+git pull origin main
+ls tp-3tiers/    # le dossier du TP doit apparaître</div>
+
+      <div class="tip">
+        <strong>💡</strong> Si la commande échoue avec un message de conflit, consulte l'<a href="#annexe-git-update" style="color:#fde68a">Annexe C — Mise à jour OVA</a>.
+      </div>
+
+      <p class="code-label">2. Vérifier les outils pré-installés</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>terraform version
 ansible --version</div>
 
@@ -552,6 +581,9 @@ ansible --version</div>
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">Définir le mot de passe DB via variable d'environnement
             <span class="cmd">export TF_VAR_db_password="MonMotDePasseSecret42"</span>
+            <div style="margin-top:0.4rem; font-size:0.83rem; color:#94a3b8;">
+              ⚠️ Cette variable n'existe que dans le terminal courant. Si tu ouvres un nouveau terminal entre les étapes, il faudra la ré-exporter. Pour éviter ça, tu peux l'ajouter à la fin de <code>~/.bashrc</code> : <code>echo 'export TF_VAR_db_password="MonMotDePasseSecret42"' >> ~/.bashrc</code>
+            </div>
           </div>
         </div>
       </div>
@@ -577,28 +609,23 @@ ansible --version</div>
         <strong>📋 Rappel clé :</strong> Ansible utilise le module <code>apt</code> pour installer des paquets sur Ubuntu/Debian. Le paramètre <code>become: yes</code> est nécessaire pour les opérations root.
       </div>
 
-      <p>Ouvre le fichier <code>tp-3tiers/ansible/playbooks/01-install-docker.yml</code> et complète la tâche d'installation manquante.</p>
-
-      <p class="code-label">Fichier à compléter</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># tp-3tiers/ansible/playbooks/01-install-docker.yml
-
-- name: "Installer Docker et ses dépendances"
-  # ← COMPLÉTER ICI
-  # Module à utiliser : apt
-  # Packages : docker.io, docker-compose-plugin, python3-docker
-  # Ne pas oublier : state: present, update_cache: yes</div>
+      <p>Ouvre <code>tp-3tiers/ansible/playbooks/01-install-docker.yml</code> et observe la structure : un play avec <code>become: yes</code>, une tâche <code>apt</code> pour installer les paquets, puis des tâches pour démarrer le service et ajouter l'utilisateur au groupe docker.</p>
 
       <div class="tip">
-        <strong>💡 Conseil :</strong> La liste de packages peut s'écrire en YAML inline : <code>name: [pkg1, pkg2]</code> ou sur plusieurs lignes avec des tirets.
+        <strong>💡 À retenir :</strong> Le module <code>apt</code> accepte une liste de paquets via <code>name: [pkg1, pkg2]</code>. <code>become: yes</code> est obligatoire pour toute opération système nécessitant des droits root.
       </div>
 
       <div class="warning-box">
         <strong>⚠ Piège classique :</strong> Oublier <code>become: yes</code> pour l'installation de paquets provoque une erreur de permission. Et attention à ne pas démarrer le service <em>avant</em> de l'installer !
       </div>
 
+      <div class="prereq">
+        <strong>📋 Inventaire Ansible :</strong> À cette étape, l'inventaire généré par Terraform n'existe pas encore (il sera créé à l'étape 2). On utilise donc l'inventaire statique <code>inventories/hosts.ini</code> fourni dans le scaffold, qui cible simplement <code>localhost</code>. À partir de l'étape 2, l'<code>ansible.cfg</code> basculera automatiquement sur <code>inventories/generated.ini</code>.
+      </div>
+
       <p class="code-label">Lancer le playbook</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/ansible
-ansible-playbook playbooks/01-install-docker.yml -v</div>
+ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml -v</div>
 
       <div class="verif-section">
         <h4>✔ Vérifications après l'étape 1</h4>
@@ -611,6 +638,17 @@ ansible-playbook playbooks/01-install-docker.yml -v</div>
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Activer le groupe docker dans la session courante
+            <span class="cmd">newgrp docker</span>
+            <div style="margin-top:0.4rem; font-size:0.83rem; color:#94a3b8;">
+              Le playbook vient d'ajouter ton utilisateur au groupe <code>docker</code>, mais ce changement n'est actif
+              que dans une nouvelle session. <code>newgrp docker</code> recharge le groupe sans devoir
+              se déconnecter. À faire <strong>avant</strong> de tester <code>docker ps</code>.
+            </div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">Docker fonctionne sans sudo
             <span class="cmd">docker ps</span>
             <div class="expected-output">CONTAINER ID   IMAGE   COMMAND   ...</div>
@@ -619,7 +657,7 @@ ansible-playbook playbooks/01-install-docker.yml -v</div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">Le playbook est idempotent (relancer sans erreur ni changement)
-            <span class="cmd">ansible-playbook playbooks/01-install-docker.yml</span>
+            <span class="cmd">ansible-playbook -i inventories/hosts.ini playbooks/01-install-docker.yml</span>
             <div class="expected-output">ok=5   changed=0   unreachable=0   failed=0</div>
           </div>
         </div>
@@ -648,7 +686,7 @@ ansible-playbook playbooks/01-install-docker.yml -v</div>
         <strong>Objectif :</strong> Créer 3 réseaux Docker via Terraform. Le réseau <code>db_net</code> doit être <strong>internal=true</strong> pour qu'aucun conteneur dessus ne puisse initier de connexion vers internet.
       </div>
 
-      <p>Ouvre <code>tp-3tiers/terraform/main.tf</code> et complète les 3 blocs <code>docker_network</code>.</p>
+      <p>Ouvre <code>tp-3tiers/terraform/main.tf</code> et observe les 3 blocs <code>docker_network</code> : <code>dmz_net</code> et <code>app_net</code> sont des réseaux standard, <code>db_net</code> a <code>internal = true</code>. Comprends pourquoi chaque réseau a ou n'a pas ce paramètre (→ QCM Q2).</p>
 
       <div class="tip">
         <strong>💡 Rappel :</strong> <code>internal = true</code> sur un réseau Docker empêche le trafic sortant vers l'extérieur. C'est la clé de l'isolation de la couche base de données.
@@ -658,13 +696,17 @@ ansible-playbook playbooks/01-install-docker.yml -v</div>
         <strong>⚠ Question de sécurité :</strong> Pourquoi <code>dmz_net</code> ne doit-il PAS être <code>internal</code> ? Réfléchis avant de regarder le QCM.
       </div>
 
+      <div class="prereq">
+        <strong>📋 Accès internet requis :</strong> <code>terraform init</code> télécharge le provider <code>kreuzwerker/docker</code> depuis le registre Terraform (<code>registry.terraform.io</code>). L'OVA doit avoir accès à internet. Si tu es en réseau sans accès extérieur, demande au formateur le binaire provider mis en cache.
+      </div>
+
       <p class="code-label">Initialiser et appliquer Terraform</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/terraform
 
-# Première fois uniquement
+# Première fois uniquement — télécharge le provider kreuzwerker/docker
 terraform init
 
-# Voir ce qui va être créé
+# Voir ce qui va être créé (réseaux + conteneurs)
 terraform plan
 
 # Créer l'infrastructure
@@ -719,7 +761,7 @@ terraform apply</div>
         <strong>Objectif :</strong> Configurer le conteneur PostgreSQL dans <code>main.tf</code> avec 3 contraintes de sécurité : réseau <code>db_net</code> uniquement, aucun port exposé vers l'hôte, volume persistant monté.
       </div>
 
-      <p>Complète le bloc <code>resource "docker_container" "postgres"</code> dans <code>tp-3tiers/terraform/main.tf</code>.</p>
+      <p>Observe le bloc <code>resource "docker_container" "postgres"</code> dans <code>tp-3tiers/terraform/main.tf</code> : réseau <code>db_net</code>, volume persistant, variables d'environnement, <strong>absence de bloc <code>ports {}</code></strong>. Comprends pourquoi chaque choix est fait (→ QCM Q3).</p>
 
       <div class="tip">
         <strong>💡 Rappel architecture :</strong> Flask peut joindre PostgreSQL via le nom du conteneur (<code>postgres</code>) parce qu'ils sont tous les deux sur <code>db_net</code>. Mais personne de l'extérieur ne doit pouvoir joindre PostgreSQL directement → pas de bloc <code>ports {}</code>.
@@ -792,51 +834,50 @@ POSTGRES_PASSWORD ← var.db_password  (variable sensitive !)</div>
         <strong>Objectif :</strong> Compléter le template Nginx avec les en-têtes de sécurité et le rate limiting. Chiffrer le mot de passe DB avec Ansible Vault.
       </div>
 
+      <div class="prereq">
+        <strong>📋 Note sur flask_app :</strong> L'image <code>python:3.11-slim</code> utilisée dans ce TP est une image de base sans application Flask réelle — le conteneur démarre puis s'arrête immédiatement. <code>curl http://localhost/</code> retourne donc un <strong>502 Bad Gateway</strong> (nginx ne trouve pas de backend), ce qui est normal dans le cadre de ce TP. L'important est de vérifier que Nginx répond (code HTTP présent) et que les <strong>en-têtes de sécurité</strong> sont bien là — ils apparaissent dans la réponse Nginx quelle que soit la réponse du backend.
+      </div>
+
       <p><strong>Partie A — Template Nginx</strong></p>
-      <p>Complète <code>tp-3tiers/ansible/templates/nginx.conf.j2</code> en ajoutant les éléments manquants.</p>
+      <p>Ouvre <code>tp-3tiers/ansible/templates/nginx.conf.j2</code> et observe les éléments de sécurité déjà en place. Pour chaque directive, comprends son rôle (→ QCM Q4) :</p>
 
-      <p class="code-label">Éléments de sécurité à ajouter dans le template</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># 1. Désactiver la divulgation de version
-server_tokens off;
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># 1. server_tokens off        → masque la version Nginx dans les headers HTTP
+# 2. add_header X-Frame-Options  → protection contre le clickjacking
+# 3. add_header X-Content-Type   → empêche le MIME sniffing
+# 4. add_header X-XSS-Protection → protection XSS (navigateurs anciens)
+# 5. add_header Referrer-Policy  → contrôle les infos envoyées au site cible
+# 6. limit_req zone=app          → rate limiting contre le brute-force/DDoS
+# 7. proxy_pass flask_app:5000   → nom de conteneur Docker, pas localhost !
+# 8. proxy_hide_header X-Powered-By → masque la stack applicative</div>
 
-# 2. En-têtes de sécurité (dans le bloc server {})
-add_header X-Frame-Options "SAMEORIGIN";
-add_header X-Content-Type-Options "nosniff";
-add_header X-XSS-Protection "1; mode=block";
-add_header Referrer-Policy "strict-origin";
+      <p style="margin-top:1.2rem"><strong>Partie B — Ansible Vault (comprendre le principe)</strong></p>
 
-# 3. Rate limiting (dans location /)
-limit_req zone=app burst=20 nodelay;
+      <div class="prereq">
+        <strong>📋 Sécurité allégée pour ce TP :</strong> Le mot de passe DB est pré-rempli en clair dans <code>group_vars/all.yml</code> pour simplifier l'exécution et la vérification. Le chiffrement Vault est présenté ici comme exercice de compréhension — le playbook fonctionne sans lui. En production, un secret en clair dans un fichier Git est une faille critique.
+      </div>
 
-# 4. Masquer le header applicatif
-proxy_hide_header X-Powered-By;</div>
+      <p>Ouvre <code>tp-3tiers/ansible/group_vars/all.yml</code> et observe le commentaire sur <code>db_password</code>. La commande suivante est donnée à titre informatif — son exécution est <strong>optionnelle</strong> pour ce TP :</p>
 
-      <p style="margin-top:1.2rem"><strong>Partie B — Ansible Vault</strong></p>
-      <p>Chiffre le mot de passe de la base de données avec Ansible Vault pour ne plus l'avoir en clair dans <code>group_vars/all.yml</code>.</p>
+      <p class="code-label">Vault — syntaxe à retenir (exécution optionnelle)</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Depuis tp-3tiers/ansible/
+# 1. Créer le fichier vault password (ne jamais committer)
+echo "MonMotDePasseVault" > .vault_pass && chmod 600 .vault_pass
 
-      <p class="code-label">Créer un fichier vault password (ne jamais committer)</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>echo "MonMotDePasseVault" > tp-3tiers/ansible/.vault_pass
-chmod 600 tp-3tiers/ansible/.vault_pass</div>
-
-      <p class="code-label">Chiffrer la valeur du mot de passe DB</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/ansible
+# 2. Chiffrer — copier la sortie !vault | dans group_vars/all.yml à la place du mot de passe en clair
 ansible-vault encrypt_string 'MonMotDePasseSecret42' \
   --name 'db_password' \
   --vault-password-file .vault_pass</div>
 
-      <p class="code-label">Copier la sortie dans group_vars/all.yml (exemple)</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># group_vars/all.yml
-db_password: !vault |
-  $ANSIBLE_VAULT;1.1;AES256
-  61383930613365336338323866343862...  ← ta valeur chiffrée ici</div>
-
       <div class="tip">
-        <strong>💡 Rappel :</strong> <code>!vault</code> est le tag YAML qui indique à Ansible que la valeur est chiffrée. Ansible la déchiffre automatiquement au moment de l'exécution si le vault password est fourni.
+        <strong>💡 Rappel :</strong> <code>!vault</code> est le tag YAML qui indique à Ansible que la valeur est chiffrée. Si tu chiffres le mot de passe, ajoute <code>--vault-password-file .vault_pass</code> à la commande ansible-playbook ci-dessous.
+      </div>
+
+      <div class="prereq">
+        <strong>📋 Nginx dans Docker, pas sur l'hôte :</strong> Le module Ansible <code>template</code> écrit sur le système de fichiers de la machine où Ansible s'exécute (ici l'OVA). Mais nginx tourne dans un <em>conteneur Docker</em> dont le système de fichiers est isolé. Le playbook génère donc la config dans <code>/tmp/</code> sur l'hôte, puis utilise <code>docker cp</code> pour la transférer dans le conteneur.
       </div>
 
       <p class="code-label">Déployer la configuration Nginx</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible-playbook playbooks/02-configure-nginx.yml \
-  --vault-password-file .vault_pass -v</div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>ansible-playbook playbooks/02-configure-nginx.yml -v</div>
 
       <div class="verif-section">
         <h4>✔ Vérifications après l'étape 4</h4>
@@ -844,14 +885,21 @@ db_password: !vault |
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">La config Nginx est valide
             <span class="cmd">docker exec nginx nginx -t</span>
-            <div class="expected-output">nginx: configuration file ... syntax is ok</div>
+            <div class="expected-output">nginx: configuration file /etc/nginx/nginx.conf test is successful</div>
+          </div>
+        </div>
+        <div class="verif-item">
+          <div class="check-box" onclick="toggleCheck(this)"></div>
+          <div class="check-label">Nginx répond (200 ou 502 selon le backend, peu importe ici)
+            <span class="cmd">curl -s -o /dev/null -w "%{http_code}" http://localhost</span>
+            <div class="expected-output">200 ou 502 — l'important est qu'une réponse HTTP est reçue (pas de "Connection refused")</div>
           </div>
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
           <div class="check-label">server_tokens est désactivé (pas de version dans les réponses)
             <span class="cmd">curl -I http://localhost 2>/dev/null | grep -i server</span>
-            <div class="expected-output">Server: nginx  (sans numéro de version)</div>
+            <div class="expected-output">Server: nginx  (sans numéro de version après "nginx")</div>
           </div>
         </div>
         <div class="verif-item">
@@ -863,14 +911,14 @@ db_password: !vault |
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Vault : le mot de passe est chiffré dans group_vars/all.yml
-            <span class="cmd">grep -A2 "db_password" group_vars/all.yml</span>
-            <div class="expected-output">db_password: !vault |  $ANSIBLE_VAULT...</div>
+          <div class="check-label">db_password est visible dans group_vars/all.yml (en clair pour ce TP)
+            <span class="cmd">grep "db_password" group_vars/all.yml</span>
+            <div class="expected-output">db_password: "MonMotDePasseSecret42"</div>
           </div>
         </div>
         <div class="verif-item">
           <div class="check-box" onclick="toggleCheck(this)"></div>
-          <div class="check-label">Vault : Ansible peut déchiffrer la variable
+          <div class="check-label">(Bonus Vault) Si tu as chiffré : Ansible peut déchiffrer la variable
             <span class="cmd">ansible localhost -m debug -a "var=db_password" --vault-password-file .vault_pass</span>
             <div class="expected-output">db_password: MonMotDePasseSecret42</div>
           </div>
@@ -902,29 +950,26 @@ db_password: !vault |
         <strong>⚠ Ordre critique :</strong> <code>defer terraform.Destroy()</code> doit être déclaré <em>avant</em> <code>InitAndApply()</code>. Si tu le mets après, un échec de Apply laisserait l'infra orpheline.
       </div>
 
-      <p class="code-label">Structure attendue du test (à compléter)</p>
-      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>func TestInfrastructure3Tiers(t *testing.T) {
-    opts := &terraform.Options{
-        TerraformDir: "../terraform",
-        // ...
-    }
+      <p>Ouvre <code>tp-3tiers/test/infrastructure_test.go</code> et observe la structure (→ QCM Q5) :</p>
 
-    // ← ÉTAPE 1 : defer Destroy AVANT InitAndApply
-    defer terraform.Destroy(t, opts)
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button">// ORDRE CRITIQUE — defer AVANT InitAndApply
+defer terraform.Destroy(t, opts)   // 1. enregistrer le cleanup (s'exécute en dernier)
+terraform.InitAndApply(t, opts)    // 2. déployer l'infrastructure
 
-    // ← ÉTAPE 2 : déployer
-    terraform.InitAndApply(t, opts)
+// Test 1 : db_net.Internal == true  (vérification réseau Docker)
+// Test 2 : HttpGetWithRetry → nginx répond HTTP 200
+// Test 3 : postgres ne doit exposer aucun port (bonus)</div>
 
-    // ← ÉTAPE 3 : tester db_net.Internal == true
-    // ← ÉTAPE 4 : tester HTTP GET localhost → 200
-}</div>
+      <div class="prereq">
+        <strong>📋 Accès internet requis :</strong> <code>go mod tidy</code> télécharge les dépendances Go (Terratest, client Docker). L'OVA doit avoir accès à internet. Si le réseau est limité, demande au formateur le dossier vendor mis en cache.
+      </div>
 
       <p class="code-label">Installer Go si besoin, puis les dépendances</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Vérifier Go (sinon voir Annexe : vérification outils)
 go version
 
 cd tp-3tiers/test
-go mod tidy</div>
+go mod tidy   # télécharge terratest, le client Docker Go, testify</div>
 
       <p class="code-label">Lancer les tests</p>
       <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button>cd tp-3tiers/test
@@ -1169,6 +1214,141 @@ git clone &lt;url-du-repo&gt; ~/3iac1-lab-starter</div>
 # Terraform + Ansible : voir Annexe A
 # Docker : sudo apt install docker.io && sudo usermod -aG docker $USER
 # Go : voir Annexe A</div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ ANNEXE C — Mise à jour OVA ═══════════════════════ -->
+  <section class="step" id="annexe-git-update">
+    <div class="step-header" onclick="toggleStep(this)">
+      <div class="step-num" style="background:var(--muted);font-size:0.75rem">C</div>
+      <h2>Annexe — Mettre à jour l'OVA avec le dépôt Git (nouveau TP)</h2>
+      <span class="duration">5 min</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="step-body collapsed">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem">
+        Quand un nouveau TP est publié ou que le formateur pousse des corrections, l'OVA doit être synchronisée avec le dépôt Git distant. Cette procédure explique comment récupérer les nouveaux fichiers sans perdre ton travail.
+      </p>
+
+      <!-- Cas 1 — Git pull simple -->
+      <p style="font-weight:700;color:#60a5fa;margin:0 0 0.6rem">📥 Cas 1 — Tu n'as pas modifié les fichiers scaffold (cas habituel)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">
+        Si tu as seulement complété les fichiers dans <code>tp-3tiers/</code> ou créé tes propres fichiers (<code>.tfvars</code>, inventaires générés…), un simple <code>git pull</code> suffit — ces fichiers sont ignorés par <code>.gitignore</code> et ne seront pas touchés.
+      </p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Depuis la racine du dépôt
+cd ~/3iac1-lab-starter
+
+# Vérifier l'état avant toute chose
+git status
+
+# Récupérer les mises à jour
+git pull origin main
+
+# Vérifier les nouveaux fichiers reçus
+git log --oneline -5
+ls tp-3tiers/        # le nouveau dossier doit apparaître</div>
+      <div class="tip">
+        <strong>💡 Fichiers protégés par .gitignore :</strong> <code>terraform.tfvars</code>, <code>.terraform/</code>, <code>inventories/generated.ini</code>, <code>.vault_pass</code> ne sont jamais trackés. Un <code>git pull</code> ne les modifie <strong>jamais</strong>.
+      </div>
+
+      <!-- Cas 2 — Conflits sur fichiers scaffold -->
+      <p style="font-weight:700;color:#f59e0b;margin:1.5rem 0 0.6rem">⚠️ Cas 2 — Tu as modifié un fichier scaffold (ex : <code>main.tf</code>, un playbook…)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">
+        Si tu as édité des fichiers trackés par Git (les fichiers scaffold fournis), <code>git pull</code> risque de te signaler un conflit. Deux options :
+      </p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># ── Option A : mettre ton travail de côté temporairement (stash) ──
+git stash                    # sauvegarde tes modifications locales
+git pull origin main         # récupère les mises à jour
+git stash pop                # réapplique tes modifications par-dessus
+# Si conflit : git ouvre un marqueur <<<<<<< — résoudre manuellement, puis :
+# git add &lt;fichier&gt; &amp;&amp; git stash drop
+
+# ── Option B : garder ta version, ignorer les changements distants ──
+# (uniquement si tu sais ce que tu fais)
+git pull origin main --strategy-option=ours</div>
+
+      <!-- Cas 3 — Réinitialiser depuis zéro -->
+      <p style="font-weight:700;color:#ef4444;margin:1.5rem 0 0.6rem">🔄 Cas 3 — Repartir proprement depuis la version du formateur</p>
+      <div class="warning-box">
+        <strong>⚠ Destructif :</strong> Cette opération écrase toutes tes modifications locales sur les fichiers trackés. Tes <code>.tfvars</code> et fichiers ignorés par <code>.gitignore</code> sont préservés.
+      </div>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button># Sauvegarder d'abord ton travail si besoin :
+cp tp-3tiers/terraform/main.tf ~/mon-main-tf.bak
+
+# Réinitialiser tous les fichiers trackés à la version distante :
+git fetch origin
+git reset --hard origin/main
+
+# Vérifier :
+git status          # doit afficher "nothing to commit, working tree clean"
+ls tp-3tiers/       # nouveau TP visible</div>
+
+      <!-- Vérification finale -->
+      <p style="font-weight:700;color:#10b981;margin:1.5rem 0 0.6rem">✅ Vérifier la mise à jour</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># Confirmer que le nouveau TP est bien présent
+ls -la tp-3tiers/
+ls -la tp-3tiers/terraform/
+ls -la tp-3tiers/ansible/
+ls -la tp-3tiers/test/
+
+# Voir les derniers commits reçus
+git log --oneline -8</div>
+      <div class="tip">
+        <strong>💡 Bonne pratique :</strong> Avant chaque séance, lance <code>git pull origin main</code> depuis <code>~/3iac1-lab-starter</code>. Si la commande affiche <em>"Already up to date"</em>, tu es à jour. Si elle liste des fichiers, lis le message du commit (<code>git log --oneline -1</code>) pour savoir ce qui a changé.
+      </div>
+
+      <!-- Persister dans l'OVA -->
+      <p style="font-weight:700;color:#a855f7;margin:1.5rem 0 0.6rem">💾 Persister les mises à jour dans l'OVA (pour les prochains démarrages ou duplications)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.8rem">
+        Un <code>git pull</code> ne modifie que le disque virtuel de la VM en cours d'exécution. Si tu éteins et relances la VM depuis l'OVA d'origine, ou si tu l'importes sur un autre PC, tu repars de la version initiale — sans les nouveaux TP. Pour conserver définitivement les mises à jour, tu as deux options selon ton hyperviseur.
+      </p>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:0.8rem 0 0.4rem">Option 1 — Créer un snapshot VirtualBox (recommandé)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Un snapshot "fige" l'état complet de la VM à un instant T. Tu peux revenir à cet état à tout moment, ou t'en servir comme point de départ pour une nouvelle session.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># 1. Depuis la VM, effectue le git pull (voir ci-dessus)
+# 2. Éteins proprement la VM :
+sudo poweroff
+
+# 3. Dans VirtualBox (hôte Windows/Mac/Linux) :
+#    → Sélectionne la VM dans la liste
+#    → Menu Machine → Instantanés (ou icône appareil photo)
+#    → Prendre un instantané
+#    → Nom suggéré : "après-pull-tp-3tiers-2026-05-28"
+#
+# 4. Pour revenir à cet état plus tard :
+#    → Clic droit sur l'instantané → Restaurer
+#
+# ✅ Tout redémarrage depuis cet instantané inclut les nouveaux fichiers.</div>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:1.2rem 0 0.4rem">Option 2 — Exporter une nouvelle OVA à partager</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Si tu veux partager la VM mise à jour avec un autre étudiant ou l'importer sur un autre PC, exporte-la en OVA depuis VirtualBox.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># 1. Depuis la VM, effectue le git pull et éteins la VM (sudo poweroff)
+#
+# 2. Dans VirtualBox :
+#    → Fichier → Exporter un appareil virtuel
+#    → Sélectionne ta VM → Suivant
+#    → Format : OVA  |  Fichier : ~/Bureau/3iac1-tp-3tiers-v2.ova
+#    → Exporter
+#
+# 3. Partager le fichier .ova ou l'importer sur l'autre PC :
+#    VirtualBox → Fichier → Importer un appareil virtuel → sélectionner le .ova</div>
+
+      <p style="font-weight:600;color:#e2e8f0;margin:1.2rem 0 0.4rem">Option 3 — Script de démarrage automatique (avancé)</p>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:0.6rem">Pour ne plus jamais avoir à penser à <code>git pull</code>, configure la VM pour le faire automatiquement à chaque connexion SSH ou ouverture de terminal.</p>
+      <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copier</button"># Ajouter à la fin de ~/.bashrc (s'exécute à chaque ouverture de terminal) :
+echo '
+# Auto-sync dépôt 3IAC1 au démarrage
+if [ -d ~/3iac1-lab-starter/.git ]; then
+  echo "🔄 Synchronisation du dépôt 3iac1-lab-starter..."
+  git -C ~/3iac1-lab-starter pull --quiet origin main \
+    && echo "✅ Dépôt à jour." \
+    || echo "⚠️  Impossible de joindre le dépôt (mode hors-ligne ?)."
+fi
+' >> ~/.bashrc</div>
+      <div class="warning-box">
+        <strong>⚠ Prérequis :</strong> La VM doit avoir accès à Internet au démarrage. Si le réseau n'est pas disponible (mode hors-ligne, VPN, proxy d'entreprise), le pull échoue silencieusement mais ne bloque pas la session.
+      </div>
 
     </div>
   </section>

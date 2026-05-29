@@ -2,29 +2,40 @@
 # =============================================================================
 # Playbook 02 — Configuration Nginx (reverse proxy sécurisé)
 # Objectif : déployer la config Nginx avec les en-têtes de sécurité
-# Prérequis : Docker en cours d'exécution, conteneur nginx démarré par Terraform
+# Prérequis : terraform apply exécuté (étape 2), conteneur nginx démarré
+#
+# Pourquoi docker cp et pas template directement dans /etc/nginx/ ?
+#   Nginx tourne dans un conteneur Docker — son système de fichiers est isolé
+#   de l'hôte. Le module 'template' écrit sur l'hôte, pas dans le conteneur.
+#   La commande 'docker cp' copie le fichier généré vers le bon endroit.
 # =============================================================================
 
 - name: "Configuration de Nginx"
   hosts: localhost
-  become: yes
-
-  vars:
-    nginx_config_dest: "/etc/nginx/conf.d/app.conf"
+  become: no
 
   tasks:
 
-    - name: "Déployer la configuration Nginx depuis le template"
+    - name: "Supprimer la configuration Nginx par défaut dans le conteneur"
+      command: docker exec nginx rm -f /etc/nginx/conf.d/default.conf
+      # L'image nginx:alpine inclut un default.conf qui écoute aussi sur le port 80.
+      # S'il reste, nginx charge deux server{} sur le même port → conflit.
+      changed_when: true
+
+    - name: "Générer la config Nginx depuis le template (fichier temporaire sur l'hôte)"
       template:
         src: "../templates/nginx.conf.j2"
-        dest: "{{ nginx_config_dest }}"
-        owner: root
-        group: root
+        dest: "/tmp/nginx-app.conf"
         mode: "0644"
-      # TODO : quelle différence entre 'template' et 'copy' ?
-      notify: reload_nginx
+      # Le module 'template' substitue les variables Jinja2 ({{ flask_upstream }}, etc.)
+      # et écrit le fichier résultant dans /tmp/ sur l'hôte.
 
-    - name: "Tester la configuration Nginx"
+    - name: "Copier la config dans le conteneur Nginx"
+      command: docker cp /tmp/nginx-app.conf nginx:/etc/nginx/conf.d/app.conf
+      # docker cp transfère le fichier depuis l'hôte vers le conteneur.
+      # Équivalent à 'scp' mais pour les conteneurs Docker.
+
+    - name: "Tester la configuration Nginx (dans le conteneur)"
       command: docker exec nginx nginx -t
       register: nginx_test
       changed_when: false
@@ -33,6 +44,6 @@
       debug:
         msg: "{{ nginx_test.stdout_lines }}"
 
-  handlers:
-    - name: reload_nginx
+    - name: "Recharger Nginx pour appliquer la nouvelle configuration"
       command: docker exec nginx nginx -s reload
+      # 'nginx -s reload' relit la config sans couper les connexions en cours.

@@ -10,12 +10,14 @@
 
   tasks:
 
-    # TODO Q1 : Compléter cette tâche avec le bon module Ansible
-    # Indice : on installe des paquets système sur Ubuntu
     - name: "Installer Docker et ses dépendances"
-      # TODO : quel module ? quels paramètres ?
-      # Packages à installer : docker.io, docker-compose-plugin, python3-docker
-      # N'oubliez pas update_cache: yes
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+          - python3-docker
+        state: present
+        update_cache: yes
 
     - name: "Démarrer et activer le service Docker"
       service:
@@ -25,7 +27,7 @@
 
     - name: "Ajouter l'utilisateur courant au groupe docker"
       user:
-        name: "{{ ansible_user }}"
+        name: "{{ ansible_env.USER }}"
         groups: docker
         append: yes
 

@@ -17,21 +17,22 @@ limit_req_zone $binary_remote_addr zone=app:10m rate=10r/s;
 
 server {
     listen {{ nginx_port }};
+    server_tokens off;
 
-    # TODO : désactiver la divulgation de la version Nginx
-
-    # TODO : ajouter les en-têtes de sécurité
+    add_header X-Frame-Options       "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection       "1; mode=block";
+    add_header Referrer-Policy        "strict-origin";
 
     location / {
-        # TODO : activer le rate limiting (burst=20 nodelay)
+        limit_req zone=app burst=20 nodelay;
 
-        # TODO : définir proxy_pass (utiliser le nom du conteneur, pas localhost !)
         proxy_pass http://{{ flask_upstream }};
 
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
 
-        # TODO : masquer l'en-tête X-Powered-By
+        proxy_hide_header X-Powered-By;
     }
 }

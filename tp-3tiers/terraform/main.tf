@@ -38,8 +38,8 @@ resource "docker_network" "app_net" {
 }
 
 resource "docker_network" "db_net" {
-  name = "db_net"
-  # TODO : ajouter le paramètre qui empêche ce réseau d'accéder à internet
+  name     = "db_net"
+  internal = true
 }
 
 # =============================================================================
@@ -55,28 +55,27 @@ resource "docker_volume" "pg_data" {
 # =============================================================================
 
 # ── PostgreSQL ────────────────────────────────────────────────────────────────
-# TODO Q3 : Compléter ce bloc
-# Contraintes :
-#   - Réseau : db_net uniquement
-#   - Aucun port exposé vers l'hôte
-#   - Volume persistant monté sur /var/lib/postgresql/data
-#   - Variables d'environnement pour POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
-
 resource "docker_container" "postgres" {
   name    = "postgres"
   image   = var.postgres_image
   restart = "unless-stopped"
 
   networks_advanced {
-    # TODO : quel réseau ?
-    name = ""
+    name = docker_network.db_net.name
   }
 
-  # TODO : ajouter le bloc volumes {}
+  volumes {
+    volume_name    = docker_volume.pg_data.name
+    container_path = "/var/lib/postgresql/data"
+  }
 
   env = [
-    # TODO : ajouter les variables d'environnement PostgreSQL
+    "POSTGRES_DB=${var.db_name}",
+    "POSTGRES_USER=${var.db_user}",
+    "POSTGRES_PASSWORD=${var.db_password}",
   ]
+
+  # Pas de bloc ports {} : PostgreSQL n'est pas accessible depuis l'hôte (isolation db_net)
 }
 
 # ── Redis ─────────────────────────────────────────────────────────────────────
